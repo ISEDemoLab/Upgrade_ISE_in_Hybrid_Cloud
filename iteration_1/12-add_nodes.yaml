@@ -1,0 +1,192 @@
+---
+- name: Add nodes to the Deployment
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../vars/main.yaml
+    - ../vars/banners.yaml
+
+# ------------------------------------------------------------------------
+# Ⰹ ISE REST API: POST /api/v1/deployment/node/
+# Registers a Cisco ISE node to form a multi-node deployment.
+# Approximate execution time - 300 seconds.
+#
+# Roles: # use [] (no roles) for dedicated PSN
+# - Standalone
+# - PrimaryAdmin
+# - PrimaryMonitoring
+# - SecondaryAdmin
+# - SecondaryMonitoring
+# - PrimaryDedicatedMonitoring
+# - SecondaryDedicatedMonitoring
+#
+# Services: # use [] (no services) for dedicated PAN/MNT
+# - DeviceAdmin
+# - Profiler
+# - Session
+# - pxGrid
+# - pxGridCloud
+# - PassiveIdentity
+# - SXP
+# - TC-NAC
+# ------------------------------------------------------------------------
+  tasks:
+
+    - name: Standalone to Primary | {{ upg_span }} | 🕑 ~60s
+      cisco.ise.node_standalone_to_primary:
+        ise_hostname: "{{ upg_span }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        ise_debug: "{{ ise_debug }}"
+        hostname: vmware-sadmin
+      register: standalone_to_primary
+      changed_when:
+        - standalone_to_primary is defined
+        - standalone_to_primary.ise_response is defined
+        - standalone_to_primary.ise_response.success is defined
+        - standalone_to_primary.ise_response.success.message is defined
+        - standalone_to_primary.ise_response.success.message is search("successfully")
+      ignore_errors: yes
+
+    - name: 🛑 Pause for 1 Minute to allow Role Change from Standalone to Primary 🛑
+      ansible.builtin.pause:
+        seconds: 60
+
+  # ------------------------------------------------------------------------
+  # 🛈 You can use a single task to register multiple nodes to
+  # the deployment.  This task uses the `loop` function to cycle through
+  # the list of nodes (`fqdn` starts each entry as denoted by the `-`).
+  #
+  # ⚠ To use the `loop` function, all ISE node passwords must be the
+  # ⚠ same.  If you haven't updated the password for any cloud-deployed
+  # ⚠ or ZTP-enabled nodes, do that first.
+  # ------------------------------------------------------------------------
+
+    - name: Register the Cloud-based PSNs to the upgraded deployment 
+      cisco.ise.personas_register_node:
+        primary_ip: "10.1.100.41"
+        primary_username: "{{ ise_username }}"
+        primary_password: "{{ ise_password }}"
+        fqdn: "{{ item.fqdn }}"
+        username: "{{ ise_username }}"
+        password: "{{ ise_init_password }}"
+        roles: "{{ item.roles }}"
+        services: "{{ item.services }}"
+      loop:
+        - fqdn: "azure-psn.securitydemo.net"
+          roles: []
+          services: 
+            - Session
+            - Profiler
+        - fqdn: "oci-psn.securitydemo.net"
+          roles: []
+          services:
+            - Session
+            - Profiler
+            - pxGrid
+        - fqdn: "aws-psn.securitydemo.net"
+          roles: []
+          services:
+            - Session
+            - Profiler
+            - DeviceAdmin
+
+    - name: Add ise-aws to Node Group 'WestUS'
+      cisco.ise.node_group_node_create:
+        ise_hostname: "{{ upg_span }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        hostname: azure-psn
+        nodeGroupName: WestUS
+
+    - name: Add ise-azure to Node Group 'CentralUS'
+      cisco.ise.node_group_node_create:
+        ise_hostname: "{{ upg_span }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        hostname: oci-psn
+        nodeGroupName: CentralUS
+
+    - name: Add ise-oci to Node Group 'EastUS'
+      cisco.ise.node_group_node_create:
+        ise_hostname: "{{ upg_span }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        hostname: aws-psn
+        nodeGroupName: EastUS
+  # ------------------------------------------------------------------------
+  # Monitor the Sync status for all registered nodes.  Once all nodes 
+  # have the status `Connected`, the task completes.
+  # ------------------------------------------------------------------------
+
+    - name: Wait for PSNs to sync to deployment database
+      ansible.builtin.debug:
+        msg: |
+           
+           ________
+            (    )
+             \../
+              )(     Wait ~25 minutes for Node Sync
+             /  \    
+            (::::)
+           --------
+
+    - name: Wait for ISE Node Synchronization
+      cisco.ise.node_deployment_info:
+        ise_hostname: "{{ upg_span }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        ise_debug: "{{ ise_debug }}"
+      register: node_deployment_info
+      until: node_deployment_info.ise_response | selectattr('nodeStatus', '!=', 'Connected') | count == 0
+      delay: 30 # Default: 0. Seconds to delay between retries
+      retries: 240
+      timeout: 3600 # retries * delay. Default: 300. Stop checking after <seconds>
+
+    - name: Update Roles and Services for the PPAN | {{ upg_span }}
+      cisco.ise.personas_update_roles_services:
+        ip: 10.1.100.41
+        ise_verify: "{{ ise_verify }}"
+        username: "{{ ise_username }}"
+        password: "{{ ise_password }}"
+        hostname: vmware-sadmin # MUST use the hostname here, fqdn will fail!
+        roles:
+          - PrimaryAdmin
+          - SecondaryMonitoring
+        services: []
+
+
+    - name: 🛑 Pause for 5 Minutes to Allow Services to Stop 🛑
+      ansible.builtin.pause:
+        seconds: 300
+
+    - name: Wait for ISE App Server on NEW Primary Admin Node to Come Up ∆ ∆ ∆
+      ansible.builtin.debug:
+        msg: |
+           
+           ________
+            (    )
+             \../
+              )(     Wait ~20 minutes for ISE AppServer to Come Up ∆ ∆ ∆
+             /  \    on vmware-sadmin
+            (::::)
+           --------
+
+    - name: ISE Login ⮕ | vmware-sadmin ⏳
+      delegate_to: localhost
+      ansible.builtin.uri:
+        url: https://vmware-sadmin.securitydemo.net/admin/login.jsp
+        method: GET
+        follow_redirects: safe
+        timeout: "3"
+        validate_certs: "no"
+        return_content: no
+      register: result
+      until: result.status == 200
+      retries: "1000"
+      delay: "10" # wait between checks

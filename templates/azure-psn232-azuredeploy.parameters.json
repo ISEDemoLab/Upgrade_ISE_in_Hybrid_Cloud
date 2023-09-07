@@ -1,0 +1,57 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "westus"
+    },
+    "networkInterfaceName": {
+      "value": "azure-psn2nic"
+    },
+    "subnetName": {
+      "value": "Production"
+    },
+    "virtualNetworkId": {
+      "value": "/subscriptions/<subscription_id>/resourceGroups/00-chmoreto/providers/Microsoft.Network/virtualNetworks/isedemolab-vn"
+    },
+    "privateIp": {
+      "value": "192.168.100.111"
+    },
+    "virtualMachineName": {
+      "value": "azure-psn2"
+    },
+    "virtualMachineComputerName": {
+      "value": "azure-psn2"
+    },
+    "virtualMachineRG": {
+      "value": "00-chmoreto"
+    },
+    "osDiskType": {
+      "value": "Standard_LRS"
+    },
+    "osDiskDeleteOption": {
+      "value": "Delete"
+    },
+    "virtualMachineSize": {
+      "value": "Standard_D4s_v4"
+    },
+    "nicDeleteOption": {
+      "value": "Delete"
+    },
+    "adminUsername": {
+      "value": "azureuser"
+    },
+    "adminPublicKey": {
+      "value": "<ssh-rsa>"
+    },
+    "userData": {
+      "value": "<user_data>"
+    },
+    "diagnosticsStorageAccountName": {
+      "value": "chmoretosa"
+    },
+    "diagnosticsStorageAccountId": {
+      "value": "/subscriptions/<subscription_id>/resourceGroups/00-chmoreto/providers/Microsoft.Storage/storageAccounts/chmoretosa"
+    }
+  }
+}

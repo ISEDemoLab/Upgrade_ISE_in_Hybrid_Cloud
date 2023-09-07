@@ -1,0 +1,37 @@
+---
+- name: Configure PubkeyAuthentication on Primary Admin Node
+  hosts: vmware-admin
+  connection: ansible.netcommon.network_cli
+  gather_facts: false
+  vars_files:
+    - ../vars/main.yaml
+    - ../vars/banners.yaml
+  vars:
+    ansible_network_os: cisco.ios.ios
+    ansible_ssh_user: "{{ lookup('env','ISE_REST_USERNAME') }}"
+    ansible_ssh_password: "{{ lookup('env','ISE_INIT_PASSWORD') }}"
+
+  tasks:
+
+  # ------------------------------------------------------------------------
+  # Enable `PubkeyAuthentication`
+  # ------------------------------------------------------------------------
+
+    - name: ISE CLI | enable PubkeyAuthentication
+      cisco.ios.ios_config:
+        lines:
+        - service sshd PubkeyAuthentication
+
+  # ------------------------------------------------------------------------
+  # Copy the the public key file to the logged in user profile.
+  # For multiple users to use Public Key Authentication, this will
+  # need to be done for each user (log in as that user, copy their
+  # public key to their profile).
+  # ------------------------------------------------------------------------
+
+    - name: ISE CLI | Import Public Key to logged in user
+      ansible.netcommon.cli_command:
+        command: crypto key import id_rsa.pub repository FTP
+        
+    - name: Refresh inventory to ensure new instances exist in inventory ⟳
+      ansible.builtin.meta: refresh_inventory

@@ -1,0 +1,13 @@
+---
+- name: Show Ansible Facts
+  hosts: localhost
+  gather_facts: yes
+  vars_files:
+  - vars/main.yaml
+  tasks:
+
+  - name: Print all available facts
+    ansible.builtin.debug:
+      var: ansible_facts
+      # var: ise_restore_filename
+      # var: ise_backup_filename

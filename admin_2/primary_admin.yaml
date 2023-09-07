@@ -1,0 +1,29 @@
+---
+- name: Deregister ISE Deployment from CSSM Licensing
+  ansible.builtin.import_playbook: 01-license_remove.yaml
+
+- name: Delete the vmware-admin VM (ISE 3.2)
+  ansible.builtin.import_playbook: 02-delete_admin.yaml
+  tags: [ise32,vmware,delete]
+
+- name: Deploy vmware-admin (ISE 3.3)
+  ansible.builtin.import_playbook: 03-setup_admin.yaml
+  tags: [ise32,vmware,install]
+
+- name: Register to New Deployment
+  ansible.builtin.import_playbook: 04-add_vmware_admin.yaml
+
+- name: Enable API Gateway for vmware-admin
+  ansible.builtin.import_playbook: 05-enable_api.yaml
+
+- name: Promote vmware-admin from Secondary to Primary
+  ansible.builtin.import_playbook: 06-promote_to_primary.yaml
+
+- name: Install CA Cert and System Cert on vmware-admin
+  ansible.builtin.import_playbook: 07-certificates.yaml
+
+- name: Register ISE Deployment to CSSM Licensing
+  ansible.builtin.import_playbook: 08-license_cssm.yaml
+
+- name: Upgrade Complete
+  ansible.builtin.import_playbook: 09-upgrade_complete.yaml

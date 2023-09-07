@@ -1,0 +1,11 @@
+To: charlie@isedemolab.com
+From: ansible@isedemolab.com
+Subject: Configuration Backup has been RESTORED on ISE 3.3!
+
+The Configuration Backup has been created from the ISE 3.2 deployment and restored onto the following ISE 3.3 node:
+
+
+
+    ROLE                   Hostname       Node Group
+|----------------------|---------------|---------------|
+- SPAN/PMnT              vmware-sadmin

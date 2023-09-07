@@ -1,0 +1,14 @@
+To: charlie@isedemolab.com
+From: ansible@isedemolab.com
+Subject: Your ISE 3.2 Deployment is DESTROYED!
+
+All nodes have been DESTROYED
+
+
+'     _ ._  _ , _ ._     
+'   (_ ` ( `  )_  .__)   
+' ( (  (    )   `)  ) _)
+'(__ (_   (_ . _) _) ,__)
+'    `~~`\ ` . /`~~`     
+'         ;   ;          
+'________/_ __ \_________

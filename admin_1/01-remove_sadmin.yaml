@@ -1,0 +1,83 @@
+---
+- name: Remove Secondary Admin Node from the ISE Deployment
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../vars/main.yaml
+    - ../vars/banners.yaml
+  tasks:
+
+  # ------------------------------------------------------------------------
+  # Remove the three Secondary Admin node to be the temporary Primary
+  # Admin Node for the upgraded deployment.
+  # ------------------------------------------------------------------------
+  #
+  # ------------------------------------------------------------------------
+  # It's not unusual to receive an error when deregistering a node.
+  # The error will contain syntax similar to:
+  #
+  # An exception occurred during task execution. To see the full traceback, use -vvv. The error was: }
+  # fatal: [localhost]: FAILED! => changed=false
+  #   msg: |-
+  #     An error occured when executing operation. The error was: [500] - The server could not fulfill the request.
+  #    {
+  #      "error" : {
+  #        "message" : "Internal Error - Exception occurred: java.rmi.RemoteException: null; nested exception is: \n\tjava.lang.NullPointerException"
+  #      },
+  #      "version" : "1.0.0"
+  #    }
+  #...ignoring
+  #
+  # OR
+  #
+  #An exception occurred during task execution. To see the full traceback, use -vvv. The error was: ciscoisesdk.exceptions.ciscoisesdkException: Socket error HTTPSConnectionPool(host='vmware-admin.securitydemo.net', port=443): Read timed out. (read timeout=60)
+  #fatal: [localhost]: FAILED! => changed=false
+  #  msg: 'An error occured when executing operation. The error was: Socket error HTTPSConnectionPool(host=''vmware-admin.securitydemo.net'', port=443): Read timed out. (read timeout=60)'
+  #...ignoring
+  #
+  # These errors can be ignored, as the node(s) will actually be successfully deregistered.
+  # This is why we use the `ignore_errors: yes` flag.
+  # ------------------------------------------------------------------------
+
+  - name: Remove ISE Node from the Deployment | vmware-sadmin 🪓
+    cisco.ise.node_deployment:
+      ise_hostname: "{{ upg_ppan }}" # ISE PAN
+      ise_username: "{{ ise_username }}"
+      ise_password: "{{ ise_password }}"
+      ise_verify: "{{ ise_verify }}"
+      ise_debug: "{{ ise_debug }}"
+      state: absent
+      hostname: vmware-sadmin # MUST use the hostname here, fqdn will fail!
+    register: ise_node_update
+    timeout: 600 # Default: 300. Stop checking after <seconds>
+    ignore_errors: yes
+
+  # - name: Remove ISE Node from the Deployment | vmware-sadmin 🪓
+  #   delegate_to: localhost
+  #   ansible.builtin.uri:
+  #     url: "https://{{ upg_ppan }}:443/api/v1/deployment/node/vmware-sadmin"
+  #     method: DELETE
+  #     url_username: "{{ ise_username }}"
+  #     url_password: "{{ ise_password }}"
+  #     force_basic_auth: yes
+  #     status_code: 200,500
+  #     validate_certs: "{{ ise_verify }}"
+  #     return_content: true
+  #   register: response
+  #   failed_when: (response.status != 200) and (response.status != 500)
+  #   ignore_errors: yes # Errors do not stop execution
+
+  - name: Verify All Nodes Deregistered from PPAN | {{ ise_ppan }}
+    # when: inventory_hostname == ise_ppan_name
+    cisco.ise.node_info:
+      ise_hostname: "{{ upg_ppan }}" # PPAN!
+      ise_username: "{{ ise_username }}"
+      ise_password: "{{ ise_password }}"
+      ise_verify: "{{ ise_verify }}"
+      ise_debug: "{{ ise_debug }}"
+    register: node_info
+    until: node_info.ise_response | count == 7  
+    delay: 10 # Default: 0. seconds to delay between retries
+    retries: 180
+    timeout: 1800 # retries * delay. Default: 300. Stop checking after <seconds>
+

@@ -1,0 +1,80 @@
+---
+- name: Deploy Azure PSNs (ISE 3.2)
+  ansible.builtin.import_playbook: 02-setup_azure.yaml
+  tags: [ise32,azure,install]
+
+- name: Deploy OCI PSNs (ISE 3.2)
+  ansible.builtin.import_playbook: 03-setup_oci.yaml
+  tags: [ise32,oci,install]
+
+- name: Deploy AWS PSNs (ISE 3.2)
+  ansible.builtin.import_playbook: 04-setup_aws.yaml
+  tags: [ise32,aws,install]
+
+- name: Deploy VMware nodes
+  ansible.builtin.import_playbook: 01-setup_vmware.yaml
+  tags: [ise32,vmware,install]
+
+- name: Wait for Application Server to be available
+  ansible.builtin.import_playbook: 05-wait_for_padmin_login.yaml  
+
+- name: Wait for Application Server to be available
+  ansible.builtin.import_playbook: ../iteration_1/08-wait_for_ise_login.yaml
+
+- name: Wait for Application Server to be available
+  ansible.builtin.import_playbook: ../iteration_2/08-wait_for_ise_login.yaml
+
+- name: Enable APIs on Primary and Secondary Admin Nodes
+  ansible.builtin.import_playbook: 06-enable_api.yaml
+
+- name: Enable APIs on Iteration 1 Cloud PSNs
+  ansible.builtin.import_playbook: ../iteration_1/09-enable_api.yaml
+
+- name: Enable APIs on Iteration 2 Cloud PSNs
+  ansible.builtin.import_playbook: ../iteration_2/09-enable_api.yaml
+
+- name: Configure FTP Repository on Admin Nodes
+  ansible.builtin.import_playbook: 07-create_ftp_repository.yaml
+  tags: [repo,ftp]
+
+- name: Configure FTP Repository on Iteration 1 Cloud PSNs
+  ansible.builtin.import_playbook: ../iteration_1/10-create_ftp_repository.yaml
+  tags: [repo,ftp]
+
+- name: Configure FTP Repository on Iteration 2 Cloud PSNs
+  ansible.builtin.import_playbook: ../iteration_2/10-create_ftp_repository.yaml
+  tags: [repo,ftp]
+
+- name: Install latest patch for ISE release
+  ansible.builtin.import_playbook: 08-patch_install.yaml
+  tags: [ise32,patch]
+
+- name: Wait for Application Server to be available
+  ansible.builtin.import_playbook: 05-wait_for_padmin_login.yaml  
+
+- name: Wait for Application Server to be available
+  ansible.builtin.import_playbook: ../iteration_1/08-wait_for_ise_login.yaml
+
+- name: Wait for Application Server to be available
+  ansible.builtin.import_playbook: ../iteration_2/08-wait_for_ise_login.yaml
+
+- name: Add Nodes to the deployment
+  ansible.builtin.import_playbook: 09-add_nodes.yaml
+
+- name: Install CA Cert and System Cert on Primary Admin Node
+  ansible.builtin.import_playbook: 10-certificates.yaml
+
+- name: Wait for Application Server to be available
+  ansible.builtin.import_playbook: 05-wait_for_padmin_login.yaml  
+
+- name: Wait for Application Server to be available
+  ansible.builtin.import_playbook: ../iteration_1/08-wait_for_ise_login.yaml
+
+- name: Wait for Application Server to be available
+  ansible.builtin.import_playbook: ../iteration_2/08-wait_for_ise_login.yaml
+
+- name: Register to Licensing
+  ansible.builtin.import_playbook: 13-license_cssm.yaml
+
+- name: Deployment Complete!
+  ansible.builtin.import_playbook: 14-deployment_complete.yaml

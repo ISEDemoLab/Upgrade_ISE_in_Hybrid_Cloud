@@ -1,0 +1,114 @@
+---
+- name: Create the Primary Admin Node in VMware
+  gather_facts: false
+  hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars/main.yaml
+    - ../vars/banners.yaml
+
+#--------------------------------------------------------------------------
+# This playbook Deploy ISE to an ESXi Host, attach the ztp.iso, and
+# power on the VM
+#--------------------------------------------------------------------------
+
+  tasks:
+
+    #--------------------------------------------------------------------------
+    # The example shown here is to install to an ESXi host, you can
+    # install to vCenter Server as well.
+    # Specify at least:
+    # - `datastore` to which you will install the VM
+    # - `name` VM name
+    # - `networks` for the NIC(s)
+    # - `ovf` full path to the ovf or ova file
+    # - `DeploymentOption.value` selects the size of the VM.
+    #    For this ova, the options are:
+    #   - Eval
+    #   - PSN_Lite
+    #   - small
+    #   - medium
+    #--------------------------------------------------------------------------
+
+    - name: Deploy OVA to ESXi Server to be the Primary Admin Node (3.3) ⏳ | 🕑 ~17m
+      community.vmware.vmware_deploy_ovf:
+        datastore: '{{ datastore }}'
+        name: vmware-admin
+        networks: "{u'VM Network':u'{{ ProvisioningNetworkLabel }}'}"
+        power_on: no
+        ovf: "{{ ise33_ovf }}"
+        wait_for_ip_address: true
+        validate_certs: no
+        properties:
+          DeploymentOption.value: 'medium' # For this OVA, the values are Eval, PSN_Lite, small, medium
+      delegate_to: localhost
+
+    #--------------------------------------------------------------------------
+    # Attach the ztp.iso to the VM using the full datastore path
+    # the `datastore` name must be enclosed in [brackets] followed by
+    # the rest of the path.
+    # Specify the device to attach the iso: `cdrom`, `controller_number`,
+    # `unit_number`
+    #--------------------------------------------------------------------------
+
+    - name: Add ZTP info to VM
+      community.vmware.vmware_guest:
+        validate_certs: no
+        name: vmware-admin
+        state: present
+        cdrom:
+        - type: "iso"
+          iso_path: "[{{ datastore }}] /ISO/ZTP/vmware-admin.iso"
+          controller_number: 1
+          unit_number: 1
+
+    #--------------------------------------------------------------------------
+    # Power on the VM
+    #--------------------------------------------------------------------------
+
+    - name: Power on virtual machine
+      community.vmware.vmware_guest_powerstate:
+        validate_certs: false
+        name: vmware-admin
+        state: powered-on
+
+    - name: Your Primary Admin Node has been deployed!
+      ansible.builtin.debug:
+        msg: |
+          {{bar}}(@@,     g@@@@g,g@@@@g,g@@@@g  @k     g@      @F g@@%%@g,   @L,g@@  ,g@NNBw  
+          {{bar}} $@@    g@@P`@@@P``]@@@P``]@@@ '@C   ,@]@    #@         $K  @@P    @P     '@w 
+          {{bar}}  $@@  g@@P  @@@    @@@    @@@  ]@   @` ]@  /@   gg%NN%m@@  @$    ]@ggggggg#@   
+          {{bar}}   $@@g@@P   @@@    @@@    @@@   ]@ @F   $k,@`  @F      [@  @F    ]@            
+          {{bar}}    $@@@P    @@@    @@@    @@@    $@@     @@F   %@,   ,g$@  @F     "$g,  ,g@    
+          {{bar}}     ""`      "`    `"`    '"`     "       `      """"  '`  "         """"  
+          {{bar}}
+          {{bar}}                Your Primary Admin Node has been deployed!
+          
+    - name: Refresh inventory to ensure new instances exist in inventory ⟳
+      ansible.builtin.meta: refresh_inventory
+
+    - name: Wait for ISE App Server on Primary Admin Node to Come Up ∆ ∆ ∆
+      ansible.builtin.debug:
+        msg: |
+           
+           ________
+            (    )
+             \../
+              )(     Wait for ISE AppServer to Come Up ∆ ∆ ∆
+             /  \    on vmware-admin
+            (::::)
+           --------
+
+    - name: ISE Login ⮕ | vmware-admin
+      delegate_to: localhost
+      ansible.builtin.uri:
+        url: https://vmware-admin.securitydemo.net/admin/login.jsp
+        method: GET
+        follow_redirects: safe
+        timeout: "3"
+        validate_certs: "no"
+        return_content: no
+      register: result
+      until: result.status == 200
+      retries: "1000"
+      delay: "10" # wait between checks

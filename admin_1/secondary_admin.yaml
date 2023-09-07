@@ -1,0 +1,21 @@
+---
+- name: Remove the Secondary Admin Node from the 3.2 Deployment
+  ansible.builtin.import_playbook: 01-remove_sadmin.yaml
+
+- name: Delete the vmware-sadmin VM (ISE 3.2)
+  ansible.builtin.import_playbook: 02-delete_sadmin.yaml
+  tags: [ise32,vmware,delete]
+
+- name: Deploy vmware-sadmin (ISE 3.3)
+  ansible.builtin.import_playbook: 03-setup_sadmin.yaml
+  tags: [ise32,vmware,install]
+
+- name: Enable APIs on vmware-sadmin
+  ansible.builtin.import_playbook: 04-enable_api.yaml
+
+- name: Create an FTP Repository
+  ansible.builtin.import_playbook: 05-create_ftp_repository.yaml
+
+- name: Create a Configuration Backup from the 3.2 Deployment and Restore to 3.3
+  ansible.builtin.import_playbook: 06-backup_and_restore.yaml
+

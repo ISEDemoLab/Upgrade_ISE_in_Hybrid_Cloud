@@ -1,0 +1,143 @@
+---
+- name: Enable ISE APIs
+  gather_facts: false
+  hosts: localhost
+  vars_files:
+    - ../vars/main.yaml
+    - ../vars/banners.yaml
+
+  tasks:
+   
+  - name: Enable ISE OpenAPIs (ISE 3.1+) on azure-psn
+    delegate_to: localhost
+    ansible.builtin.uri:
+      url: "https://azure-psn.securitydemo.net/admin/API/apiService/update"
+      method: POST
+      url_username: "{{ ise_username }}"
+      url_password: "{{ ise_init_password }}"
+      force_basic_auth: yes
+      body: |
+         {
+           "papIsEnabled": "true",
+           "psnsIsEnabled": "true"
+         }
+      status_code: 200,500
+      body_format: json
+      validate_certs: "{{ ise_verify }}"
+      return_content: true
+    register: response
+    failed_when: (response.status != 200) and (response.status != 500)
+    ignore_errors: yes # Errors do not stop execution
+
+  - name: Enable ISE ERS APIs on azure-psn
+    delegate_to: localhost
+    ansible.builtin.uri:
+      url: "https://azure-psn.securitydemo.net/admin/API/NetworkAccessConfig/ERS"
+      method: PUT
+      url_username: "{{ ise_username }}"
+      url_password: "{{ ise_init_password }}"
+      force_basic_auth: yes
+      headers:
+        Accept: application/xml
+        Content-Type: application/xml
+      body: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><ersConfig>
+        <id>1</id><isCSRFCheck>false</isCSRFCheck><isPapEnabled>true</isPapEnabled><isPsnsEnabled>true</isPsnsEnabled></ersConfig>'
+      status_code: 200
+      validate_certs: "{{ ise_verify }}"
+      return_content: true
+    register: response
+    failed_when: response.status != 200
+
+  - name: Enable ISE OpenAPIs (ISE 3.1+) on oci-psn
+    delegate_to: localhost
+    ansible.builtin.uri:
+      url: "https://oci-psn.securitydemo.net/admin/API/apiService/update"
+      method: POST
+      url_username: "{{ ise_username }}"
+      url_password: "{{ ise_init_password }}"
+      force_basic_auth: yes
+      body: |
+         {
+           "papIsEnabled": "true",
+           "psnsIsEnabled": "true"
+         }
+      status_code: 200,500
+      body_format: json
+      validate_certs: "{{ ise_verify }}"
+      return_content: true
+    register: response
+    failed_when: (response.status != 200) and (response.status != 500)
+    ignore_errors: yes # Errors do not stop execution
+
+  - name: Enable ISE ERS APIs on oci-psn
+    delegate_to: localhost
+    ansible.builtin.uri:
+      url: "https://oci-psn.securitydemo.net/admin/API/NetworkAccessConfig/ERS"
+      method: PUT
+      url_username: "{{ ise_username }}"
+      url_password: "{{ ise_init_password }}"
+      force_basic_auth: yes
+      headers:
+        Accept: application/xml
+        Content-Type: application/xml
+      body: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><ersConfig>
+        <id>1</id><isCSRFCheck>false</isCSRFCheck><isPapEnabled>true</isPapEnabled><isPsnsEnabled>true</isPsnsEnabled></ersConfig>'
+      status_code: 200
+      validate_certs: "{{ ise_verify }}"
+      return_content: true
+    register: response
+    failed_when: response.status != 200
+
+  - name: Enable ISE OpenAPIs (ISE 3.1+) on aws-psn
+    delegate_to: localhost
+    ansible.builtin.uri:
+      url: "https://aws-psn.securitydemo.net/admin/API/apiService/update"
+      method: POST
+      url_username: "{{ ise_username }}"
+      url_password: "{{ ise_init_password }}"
+      force_basic_auth: yes
+      body: |
+         {
+           "papIsEnabled": "true",
+           "psnsIsEnabled": "true"
+         }
+      status_code: 200,500
+      body_format: json
+      validate_certs: "{{ ise_verify }}"
+      return_content: true
+    register: response
+    failed_when: (response.status != 200) and (response.status != 500)
+
+  - name: Enable ISE ERS APIs on aws-psn
+    delegate_to: localhost
+    ansible.builtin.uri:
+      url: "https://aws-psn.securitydemo.net/admin/API/NetworkAccessConfig/ERS"
+      method: PUT
+      url_username: "{{ ise_username }}"
+      url_password: "{{ ise_init_password }}"
+      force_basic_auth: yes
+      headers:
+        Accept: application/xml
+        Content-Type: application/xml
+      body: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><ersConfig>
+        <id>1</id><isCSRFCheck>false</isCSRFCheck><isPapEnabled>true</isPapEnabled><isPsnsEnabled>true</isPsnsEnabled></ersConfig>'
+      status_code: 200
+      validate_certs: "{{ ise_verify }}"
+      return_content: true
+    register: response
+    failed_when: response.status != 200
+
+  - name: APIs have been enabled 🎉
+    ansible.builtin.debug:
+      msg: |
+        {{bar}}              _______ 
+        {{bar}}             /       /
+        {{bar}}    ___     /   ____/   
+        {{bar}}    \   \  /   /\        
+        {{bar}}     \   \/___/  \        ERS API and Open API have been enabled on the nodes!
+        {{bar}}      \       \   \        
+        {{bar}}       \_______\   \        
+        {{bar}}               /   /        
+        {{bar}}              /   /        
+        {{bar}}              \  /        
+        {{bar}}               \/

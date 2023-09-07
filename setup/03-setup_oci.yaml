@@ -1,0 +1,99 @@
+---
+
+- name: Create ISE 3.2 PSNs in OCI
+  gather_facts: false
+  hosts: localhost
+  collections:
+    - oracle.oci
+  vars_files:
+    - ../vars/main.yaml
+    - ../vars/banners.yaml
+
+##################################################################################
+# Use the `OCI Stuff` section of the `vars/main.yaml` file to add ISE specific
+# information for OCI including the `OCID` for the ISE installation inage for the 
+# desired version, the shape to be used, etc.
+# 
+# The HDD size is set with the `boot_volume_size_in_gbs` option under 
+# `source_details`, the CPU and RAM are set under `shape_config`.  Remember
+# that 1 OCPU = 2 vCPU
+#
+# The `user_data` must be base64 encoded to be used
+##################################################################################
+  tasks:
+    - name: Create oci-psn ⏳ | 🕑 ~72s
+      oci_compute_instance:
+        availability_domain: "{{ oci_ad }}"
+        compartment_id: "{{ instance_compartment }}"
+        name: "oci-psn"
+        source_details:
+          source_type: image
+          image_id: "{{ ise32_image }}"
+          boot_volume_size_in_gbs: "300"
+        shape: "{{ psn_shape }}"
+        shape_config:
+          memory_in_gbs: "16"
+          ocpus: "2"
+        create_vnic_details:
+          assign_public_ip: False
+          display_name: "System NIC"
+          private_ip: "192.168.102.110"
+          hostname_label: "oci-psn"
+          subnet_id: "{{ lookup('env', 'SUBNET_ID') }}"
+        metadata:
+            ssh_authorized_keys: "{{ lookup('file',  ssh_key_public_file) }}"
+            user_data: "aG9zdG5hbWU9b2NpLXBzbgpwcmltYXJ5bmFtZXNlcnZlcj0xMC4xLjEwMC4xMApkbnNkb21haW49c2VjdXJpdHlkZW1vLm5ldApudHBzZXJ2ZXI9MTAuMS4xMDAuMQp0aW1lem9uZT1BbWVyaWNhL05ld19Zb3JrCnBhc3N3b3JkPUlTRWlzQzAwTElTRQplcnNhcGk9eWVzCm9wZW5hcGk9eWVzCnB4R3JpZD15ZXMKcHhncmlkX2Nsb3VkPXllcw=="
+        freeform_tags:
+            project: "{{ project_name }}"
+            owner: "{{ owner }}"
+            started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+            role: "PSN"
+            version: "3.2"
+
+    - name: Create oci-psn2 ⏳ | 🕑 ~72s
+      oci_compute_instance:
+        availability_domain: "{{ oci_ad }}"
+        compartment_id: "{{ instance_compartment }}"
+        name: "oci-psn2"
+        source_details:
+          source_type: image
+          image_id: "{{ ise32_image }}"
+          boot_volume_size_in_gbs: "300"
+        shape: "{{ psn_shape }}"
+        shape_config:
+          memory_in_gbs: "16"
+          ocpus: "2"
+        create_vnic_details:
+          assign_public_ip: False
+          display_name: "System NIC"
+          private_ip: "192.168.102.111"
+          hostname_label: "oci-psn2"
+          subnet_id: "{{ lookup('env', 'SUBNET_ID') }}"
+        metadata:
+            ssh_authorized_keys: "{{ lookup('file',  ssh_key_public_file) }}"
+            user_data: "aG9zdG5hbWU9b2NpLXBzbjIKcHJpbWFyeW5hbWVzZXJ2ZXI9MTAuMS4xMDAuMTAKZG5zZG9tYWluPXNlY3VyaXR5ZGVtby5uZXQKbnRwc2VydmVyPTEwLjEuMTAwLjEKdGltZXpvbmU9QW1lcmljYS9OZXdfWW9yawpwYXNzd29yZD1JU0Vpc0MwMExJU0UKZXJzYXBpPW5vCm9wZW5hcGk9bm8KcHhHcmlkPW5vCnB4Z3JpZF9jbG91ZD1ubw=="
+        freeform_tags:
+            project: "{{ project_name }}"
+            owner: "{{ owner }}"
+            started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+            role: "PSN"
+            version: "3.2"
+
+    - name: oci-psn and oci-psn2 have been deployed!
+      ansible.builtin.debug:
+        msg: |
+          {{bar}}        ,,gggggggggggggggggggg,,        
+          {{bar}}    ,g@$$$$$$$$$$$$$$$$$$$$$$$$$$@g,    
+          {{bar}}  ,@$$$$$F*""``````````````""*%$$$$$@,  
+          {{bar}} /$$$$@`                         %$$$$k 
+          {{bar}},$$$$F                            ]$$$$k
+          {{bar}}$$$$$                              $$$$$
+          {{bar}}%$$$$                              #$$$$
+          {{bar}}]$$$$k                            ,$$$$F
+          {{bar}} ]$$$$k                          g$$$$F 
+          {{bar}}  '$$$$$@g,,                ,,g@$$$$$"  
+          {{bar}}    "%$$$$$$$$$$$$$$$$$$$$$$$$$$$$@"    
+          {{bar}}       `"*R%%%%%%%%%%%%%%%%%%R*"` 
+
+    - name: Refresh inventory to ensure new instances exist in inventory ⟳
+      ansible.builtin.meta: refresh_inventory

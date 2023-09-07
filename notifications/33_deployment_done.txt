@@ -1,0 +1,20 @@
+To: charlie@isedemolab.com
+From: ansible@isedemolab.com
+Subject: Your ISE 3.3 Deployment is UPGRADED!
+
+All nodes have been UPGRADED to ISE 3.3 and added to a single deployment.
+Public certificates have been installed with their Root CA,
+and the deployment is registered to the License server.
+
+
+
+    ROLE                   Hostname       Node Group
+|----------------------|---------------|---------------|
+- PPAN/SMnT              vmware-admin
+- SPAN/PMnT              vmware-sadmin
+- PSN                    azure-psn        WestUS
+- PSN                    azure-psn2       WestUS
+- PSN/pxGrid             oci-psn          CentralUS
+- PSN/pxGrid             oci-psn2         CentralUS
+- PSN/Device Admin       aws-psn          EastUS
+- PSN/Device Admin       aws-psn2         EastUS

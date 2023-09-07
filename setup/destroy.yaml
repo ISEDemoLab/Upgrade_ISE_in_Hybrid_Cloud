@@ -1,0 +1,40 @@
+---
+# If you want to keep the Admin Nodes in VMware and only destroy
+# the cloud-based nodes, comment out the last item. 
+# 
+# If you want to destroy everything, comment out the first two
+# items.  No need to worry about removing the PSNs nicely if
+# the Admin Nodes will be destroyed.
+
+# - name: Remove nodes from ISE deployment
+#   ansible.builtin.import_playbook: ../iteration_1/01-remove_nodes.yaml
+
+# - name: Remove nodes from ISE deployment
+#   ansible.builtin.import_playbook: ../iteration_2/01-remove_nodes.yaml
+
+- name: Deregister ISE Deployment from CSSM Licensing
+  ansible.builtin.import_playbook: ../admin_2/01-license_remove.yaml
+
+- name: Delete azure-psn
+  ansible.builtin.import_playbook: ../iteration_1/02-delete_azure_32.yaml
+
+- name: Delete azure-psn2
+  ansible.builtin.import_playbook: ../iteration_2/02-delete_azure_32.yaml
+
+- name: Delete oci-psn
+  ansible.builtin.import_playbook: ../iteration_1/03-delete_oci_psn.yaml
+
+- name: Delete oci-psn2
+  ansible.builtin.import_playbook: ../iteration_2/03-delete_oci_psn.yaml
+
+- name: Delete aws-psn
+  ansible.builtin.import_playbook: ../iteration_1/04-delete_aws_psn.yaml
+
+- name: Delete aws-psn2
+  ansible.builtin.import_playbook: ../iteration_2/04-delete_aws_psn.yaml
+
+- name: Delete Admin Nodes
+  ansible.builtin.import_playbook: 15-delete_vmware.yaml
+
+- name: Send Email
+  ansible.builtin.import_playbook: ../notifications/32_destroyed.yaml

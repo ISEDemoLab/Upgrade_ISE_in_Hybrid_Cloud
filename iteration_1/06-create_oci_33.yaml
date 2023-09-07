@@ -1,0 +1,70 @@
+---
+
+- name: Create an ISE 3.3 PSN in OCI
+  gather_facts: false
+  hosts: localhost
+  collections:
+    - oracle.oci
+  vars_files:
+    - ../vars/main.yaml
+    - ../vars/banners.yaml
+
+##################################################################################
+# Use the `OCI Stuff` section of the `vars/main.yaml` file to add ISE specific
+# information for OCI including the `OCID` for the ISE installation inage for the 
+# desired version, the shape to be used, etc.
+# 
+# The HDD size is set with the `boot_volume_size_in_gbs` option under 
+# `source_details`, the CPU and RAM are set under `shape_config`.  Remember
+# that 1 OCPU = 2 vCPU
+#
+# The `user_data` must be base64 encoded to be used
+##################################################################################
+  tasks:
+    - name: Create oci-psn ⏳
+      oci_compute_instance:
+        availability_domain: "{{ oci_ad }}"
+        compartment_id: "{{ instance_compartment }}"
+        name: "oci-psn"
+        source_details:
+          source_type: image
+          image_id: "{{ ise33_image }}"
+          boot_volume_size_in_gbs: "300"
+        shape: "{{ psn_shape }}"
+        shape_config:
+          memory_in_gbs: "16"
+          ocpus: "2"
+        create_vnic_details:
+          assign_public_ip: False
+          display_name: "System NIC"
+          private_ip: "192.168.102.110"
+          hostname_label: "oci-psn"
+          subnet_id: "{{ lookup('env', 'SUBNET_ID') }}"
+        metadata:
+            ssh_authorized_keys: "{{ lookup('file',  ssh_key_public_file) }}"
+            user_data: "aG9zdG5hbWU9b2NpLXBzbgpwcmltYXJ5bmFtZXNlcnZlcj0xMC4xLjEwMC4xMApkbnNkb21haW49c2VjdXJpdHlkZW1vLm5ldApudHBzZXJ2ZXI9MTAuMS4xMDAuMQp0aW1lem9uZT1BbWVyaWNhL05ld19Zb3JrCnBhc3N3b3JkPUlTRWlzQzAwTElTRQplcnNhcGk9eWVzCm9wZW5hcGk9eWVzCnB4R3JpZD15ZXMKcHhncmlkX2Nsb3VkPXllcw=="
+        freeform_tags:
+            project: "{{ project_name }}"
+            owner: "{{ owner }}"
+            started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+            role: "PSN"
+            version: "3.3"
+
+    - name: oci-psn has been deployed!
+      ansible.builtin.debug:
+        msg: |
+          {{bar}}        ,,gggggggggggggggggggg,,        
+          {{bar}}    ,g@$$$$$$$$$$$$$$$$$$$$$$$$$$@g,    
+          {{bar}}  ,@$$$$$F*""``````````````""*%$$$$$@,  
+          {{bar}} /$$$$@`                         %$$$$k 
+          {{bar}},$$$$F                            ]$$$$k
+          {{bar}}$$$$$                              $$$$$
+          {{bar}}%$$$$                              #$$$$
+          {{bar}}]$$$$k                            ,$$$$F
+          {{bar}} ]$$$$k                          g$$$$F 
+          {{bar}}  '$$$$$@g,,                ,,g@$$$$$"  
+          {{bar}}    "%$$$$$$$$$$$$$$$$$$$$$$$$$$$$@"    
+          {{bar}}       `"*R%%%%%%%%%%%%%%%%%%R*"` 
+
+    - name: Refresh inventory to ensure new instances exist in inventory ⟳
+      ansible.builtin.meta: refresh_inventory

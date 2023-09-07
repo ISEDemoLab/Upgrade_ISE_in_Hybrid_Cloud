@@ -1,0 +1,14 @@
+---
+- name: The ISE 3.2 Deployment is DESTROYED!
+  hosts: localhost
+  connection: ansible.netcommon.network_cli
+  gather_facts: false
+  vars_files:
+    - ../vars/main.yaml
+    - ../vars/banners.yaml
+
+  tasks:
+
+    - name: Send Email Notification
+      ansible.builtin.shell:
+        cmd: "ssmtp charlie@isedemolab.com < 32_deployment_destroyed.txt"

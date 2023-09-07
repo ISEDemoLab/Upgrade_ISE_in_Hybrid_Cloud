@@ -1,0 +1,111 @@
+---
+- name: Enable ISE APIs
+  gather_facts: false
+  hosts: localhost
+  vars_files:
+    - ../vars/main.yaml
+    - ../vars/banners.yaml
+
+  tasks:
+
+  - name: Enable API Gateway on vmware-admin
+    delegate_to: localhost
+    ansible.builtin.uri:
+      url: "https://vmware-sadmin.securitydemo.net/admin/API/apiGateway/update"
+      method: POST
+      url_username: "{{ ise_username }}"
+      url_password: "{{ ise_password }}"
+      force_basic_auth: yes
+      body: [
+        {
+          "hostname": "vmware-sadmin",
+          "isEnabled": "true"
+        },
+        {
+          "hostname": "vmware-admin",
+          "isEnabled": "true"
+         },
+        {
+          "hostname": "azure-psn",
+          "isEnabled": "false"
+        },
+        {
+          "hostname": "azure-psn2",
+          "isEnabled": "false"
+        },
+        {
+          "hostname": "aws-psn",
+          "isEnabled": "false"
+        },
+        {
+          "hostname": "aws-psn2",
+          "isEnabled": "false"
+        },
+        {
+          "hostname": "oci-psn",
+          "isEnabled": "false"
+        },
+        {
+          "hostname": "oci-psn2",
+          "isEnabled": "false"
+        }
+      ]
+      status_code: [
+                    200,  # OK
+                    500,  # Internal server error
+                    ]
+      body_format: json
+      validate_certs: "{{ ise_verify }}"
+      return_content: true
+    register: response
+    failed_when: (response.status != 200) and (response.status != 500)
+    ignore_errors: yes # Errors do not stop execution
+
+  # - name: Send Email Notification
+  #   ansible.builtin.shell:
+  #     cmd: "ssmtp charlie@isedemolab.com < ../notifications/api_gateway.txt"
+
+  # - name: Send "beep" Notification
+  #   ansible.builtin.shell:
+  #     cmd: "echo $'\a'"
+
+#
+# 💡 Blank lines (ASCII whitespace) in the pause prompt is trimmed by Ansible!
+#    To maintain the empty line spacing in the prompt below, each of the lines
+#    begins with a Unicode U+2003 Em Space [ ]!
+#
+
+  # - name: Press Enter to Continue
+  #   ansible.builtin.pause:
+  #     prompt: |
+  #        
+  #        
+  #         █ 🚨 █████████████████████████████████████████████████████ 🚨 █
+  #         █ 🚨 █                                                   █ 🚨 █
+  #         █ 🚨 █  Log in to vmware-sadmin and enable API Gateway   █ 🚨 █
+  #         █ 🚨 █  on vmware-sadmin                                 █ 🚨 █
+  #         █ 🚨 █                                                   █ 🚨 █
+  #         █ 🚨 █  Press ↵ Enter to Continue                        █ 🚨 █
+  #         █ 🚨 █                                                   █ 🚨 █
+  #         █ 🚨 █████████████████████████████████████████████████████ 🚨 █
+  #        
+  #        
+
+  - name: 🛑 Pause for30 seconds to allow the API Gateway to enable 🛑
+    ansible.builtin.pause:
+      seconds: 30
+
+  - name: APIs have been enabled 🎉
+    ansible.builtin.debug:
+      msg: |
+        {{bar}}              _______
+        {{bar}}             /       /
+        {{bar}}    ___     /   ____/
+        {{bar}}    \   \  /   /\
+        {{bar}}     \   \/___/  \        API Gateway has been enabled on {{ upg_ppan }}!
+        {{bar}}      \       \   \
+        {{bar}}       \_______\   \
+        {{bar}}               /   /
+        {{bar}}              /   /
+        {{bar}}              \  /
+        {{bar}}               \/

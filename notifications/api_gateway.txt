@@ -1,0 +1,14 @@
+To: charlie@isedemolab.com
+From: ansible@isedemolab.com
+Subject: Enable the API Gateway for vmware-admin
+
+The upgrade is nearly complete!  Enable the API Gateway for vmware-admin to allow the final steps to complete.
+
+      █████████████████████████████████████████████████████
+      █                                                   █
+      █  Log in to vmware-sadmin and enable API Gateway   █
+      █  on vmware-admin                                  █
+      █                                                   █
+      █  Press ↵ Enter to Continue                        █
+      █                                                   █
+      █████████████████████████████████████████████████████

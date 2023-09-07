@@ -1,0 +1,25 @@
+# Environments
+.env
+.venv
+.cert
+.json
+env/
+venv/
+ENV/
+rebuild_azure/
+
+# Git
+.git
+
+# macOS
+.DS_Store
+
+# Python
+Pipfile
+Pipfile.lock
+
+# Azure
+requirements-azure.txt
+
+# Linux
+vars/linux.yaml

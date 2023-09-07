@@ -1,0 +1,87 @@
+---
+- name: Wait for ISE login to be available (Application Server)
+  gather_facts: false
+  hosts: localhost
+  vars_files:
+    - ../vars/main.yaml
+    - ../vars/banners.yaml
+
+  tasks:
+
+    - name: Wait for ISE App Server to Come Up ∆ ∆ ∆
+      ansible.builtin.debug:
+        msg: |
+           
+           ________
+            (    )
+             \../
+              )(     Wait ~25 minutes for ISE AppServer to Come Up ∆ ∆ ∆
+             /  \    on azure-psn
+            (::::)
+           --------
+
+    - name: ISE Login ⮕ | azure-psn
+      delegate_to: localhost
+      ansible.builtin.uri:
+        url: https://azure-psn.securitydemo.net/admin/login.jsp
+        method: GET
+        follow_redirects: safe
+        timeout: "3"
+        validate_certs: "no"
+        return_content: no
+      register: result
+      until: result.status == 200
+      retries: "1000"
+      delay: "10" # wait between checks
+
+    - name: Wait for ISE App Server to Come Up ∆ ∆ ∆
+      ansible.builtin.debug:
+        msg: |
+           
+           ________
+            (    )
+             \../
+              )(     Wait for ISE AppServer to Come Up ∆ ∆ ∆
+             /  \    on oci-psn
+            (::::)
+           --------
+
+    - name: ISE Login ⮕ | oci-psn
+      delegate_to: localhost
+      ansible.builtin.uri:
+        url: https://oci-psn.securitydemo.net/admin/login.jsp
+        method: GET
+        follow_redirects: safe
+        timeout: "3"
+        validate_certs: "no"
+        return_content: no
+      register: result
+      until: result.status == 200
+      retries: "1000"
+      delay: "10" # wait between checks
+
+    - name: Wait for ISE App Server to Come Up ∆ ∆ ∆
+      ansible.builtin.debug:
+        msg: |
+           
+           ________
+            (    )
+             \../
+              )(     Wait for ISE AppServer to Come Up ∆ ∆ ∆
+             /  \    on aws-psn
+            (::::)
+           --------
+
+    - name: ISE Login ⮕ | aws-psn
+      delegate_to: localhost
+      ansible.builtin.uri:
+        url: https://aws-psn.securitydemo.net/admin/login.jsp
+        method: GET
+        follow_redirects: safe
+        timeout: "3"
+        validate_certs: "no"
+        return_content: no
+      register: result
+      until: result.status == 200
+      retries: "1000"
+      delay: "10" # wait between checks

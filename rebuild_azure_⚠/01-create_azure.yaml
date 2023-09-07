@@ -1,0 +1,402 @@
+---
+- name: Create a network in Azure with ISE and VPN
+  gather_facts: false
+  hosts: localhost
+  connection: local
+  vars_files:
+    - ~/Upgrade_ISE_in_Hybrid_Cloud/vars/main.yaml
+    - ~/Upgrade_ISE_in_Hybrid_Cloud/vars/banners.yaml
+
+#--------------------------------------------------------------------------
+# This role will create a local ssh public key pair and name it the
+# same as the project name.
+#--------------------------------------------------------------------------
+
+  # roles:
+  #   - role: ssh_key_local
+  #     vars:
+  #       ssh_key_name: "{{ project_name }}"
+
+#--------------------------------------------------------------------------
+# 💡To configure Azure for API access and to allow Ansible to configure
+# modules, create an Azure service principal.
+# 🛈 Instructions can be found at:
+# https://learn.microsoft.com/en-us/azure/developer/ansible/create-ansible-service-principal?tabs=azure-cli
+#
+#--------------------------------------------------------------------------
+# This playbook will create a local SSH Key, then move on to create a
+# Resource Group (RG), Virtual Network (VN), Security Group (SG),
+# and two subnets (Private and Gateway).  The SG will be assigned to
+# the private subnet.
+#
+#--------------------------------------------------------------------------
+
+  tasks:
+    - name: Create a resource group
+      azure_rm_resourcegroup:
+        name: "{{ az_resource_group }}"
+        location: "{{ az_region }}"
+        tags:
+          project: "{{ project_name }}"
+          owner: "{{ owner }}"
+          started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+    - name: Create virtual network
+      azure.azcollection.azure_rm_virtualnetwork:
+        resource_group: "{{ az_resource_group }}"
+        name: "{{ az_vn_name }}"
+        address_prefixes: "{{ az_vn_cidr }}"
+        tags:
+          project: "{{ project_name }}"
+          owner: "{{ owner }}"
+          started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+  #--------------------------------------------------------------------------
+  # Create the Network Security Group (ACL) before the subnets
+  # so you can attach it to your subnet as it is created.
+  #--------------------------------------------------------------------------
+
+    - name: Create network security group
+      azure.azcollection.azure_rm_securitygroup:
+        resource_group: "{{ az_resource_group }}"
+        name: "sg_chmoreto"
+        purge_rules: yes
+        rules:
+          - name: "AllowAllTCP"
+            protocol: Tcp
+            source_address_prefix: "*"
+            destination_port_range: "*"
+            access: Allow
+            priority: 100
+            direction: Inbound
+          - name: "AllowAllUDP"
+            protocol: Udp
+            source_address_prefix: "*"
+            destination_port_range: "*"
+            priority: 101
+            direction: Inbound
+          - name: "AllowAllPing"
+            protocol: Icmp
+            source_address_prefix: "*"
+            destination_port_range: "*"
+            priority: 102
+            direction: Inbound
+        tags:
+          project: "{{ project_name }}"
+          owner: "{{ owner }}"
+          started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+  #--------------------------------------------------------------------------
+  # The private subnet is where ISE will be installed
+  #--------------------------------------------------------------------------
+
+    - name: Add private subnet
+      azure.azcollection.azure_rm_subnet:
+        resource_group: "{{ az_resource_group }}"
+        name: "Production"
+        address_prefix: "{{ az_vn_private_subnet_cidr }}"
+        virtual_network: "{{ az_vn_name }}"
+        security_group_name: "sg_chmoreto"
+        # tags:  # subnets do not support tags - adding tags to a
+        # subnet will cause the task to fail, stopping the playbook
+        # from continuing.
+
+  #--------------------------------------------------------------------------
+  # The gateway subnet is where the VPN will be installed
+  #--------------------------------------------------------------------------
+
+    - name: Add gateway subnet # A GatewaySubnet is required for VPN
+      azure.azcollection.azure_rm_subnet:
+        resource_group: "{{ az_resource_group }}"
+        name: "GatewaySubnet" # Default name
+        address_prefix: "{{ az_vn_gateway_subnet_cidr }}"
+        virtual_network: "{{ az_vn_name }}"
+
+  #--------------------------------------------------------------------------
+  # Create a Storage Account to enable Boot Diagnostics
+  # so you can use the Serial Console
+  #--------------------------------------------------------------------------
+
+    - name: Create a storage account
+      azure_rm_storageaccount:
+        resource_group: "{{ az_resource_group }}"
+        name: chmoretosa # MUST be globally unique
+        account_type: Standard_LRS
+        kind: StorageV2
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+  #--------------------------------------------------------------------------
+  # Create Resource Manager deployment using the JSON template
+  # to install ISE, NIC, and Public IP.
+  # The `template_link` will be the same for all ISE VMs,
+  # use the `parameters_link` to customize per ISE node.
+  #--------------------------------------------------------------------------
+
+    - name: Create an ISE Resource Manager Deployment
+      azure_rm_deployment:
+        resource_group: "{{ az_resource_group }}"
+        name: "ISE32inAzure"
+        template_link: 'https://isedemolab.com/endpoints/ise32-azuredeploy.json'
+        parameters_link: 'https://isedemolab.com/endpoints/ise32-1-azuredeploy.parameters.json'
+
+  #--------------------------------------------------------------------------
+  # While the Resource Manager Deployment does support tags,
+  # it does NOT assign them to the resources being deployed.
+  # Add tags to the ISE VM so you know exactly when it was created
+  # and by whom.
+  #--------------------------------------------------------------------------
+
+    - name: Add tags to ISE VM 🏷️
+      azure_rm_virtualmachine:
+        resource_group: "{{ az_resource_group }}"
+        name: "ise-azure"
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+         role: PSN
+         version: "3.2"
+
+    - name: Create an ISE Resource Manager Deployment
+      azure_rm_deployment:
+        resource_group: "{{ az_resource_group }}"
+        name: "ISE32inAzure2"
+        template_link: 'https://isedemolab.com/endpoints/ise32-azuredeploy.json'
+        parameters_link: 'https://isedemolab.com/endpoints/ise32-2-azuredeploy.parameters.json'
+
+    - name: Add tags to ISE VM 🏷️
+      azure_rm_virtualmachine:
+        resource_group: "{{ az_resource_group }}"
+        name: "ise-azure2"
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+         role: PSN
+         version: "3.2"
+
+    - name: ise-azure and ise-azure2 PSNs have been deployed!
+      ansible.builtin.debug:
+        msg: |
+          {{bar}}                    ,r                  
+          {{bar}}                  ,@F  g                
+          {{bar}}               ,g@$F  ]$k               
+          {{bar}}             ,@$$$F  ,$$$@              
+          {{bar}}          ,g@$$$$F   @$$$$$,            
+          {{bar}}         ,$$$$$$F   #$$$$$$$k           
+          {{bar}}        g$$$$$$F   /$$$$$$$$$k          
+          {{bar}}       g$$$$$$F    $$$$$$$$$$$@         
+          {{bar}}      @$$$$$$F      *$$$$$$$$$$$,       
+          {{bar}}    ,$$$$$$$F         %$$$$$$$$$$k      
+          {{bar}}   /$$$$$$$F           '$$$$$$$$$$k     
+          {{bar}}  g$$$$$$$F              "$$$$$$$$$k    
+          {{bar}} NNNNNNNNF                 *$$$$$$$$@   
+          {{bar}}                 ,,,ggg&@@@$$$$$$$$$$$y 
+          {{bar}}          ````````````````````````````` 
+  #--------------------------------------------------------------------------
+  # Create a Site-to-Site VPN connection
+  # Start by creating a Public IP Address
+  #--------------------------------------------------------------------------
+
+    - name: Create a public IP Address for VPN
+      azure_rm_publicipaddress:
+        resource_group: "{{ az_resource_group }}"
+        name: vpn-ip
+        sku: standard
+        allocation_method: static
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+  #--------------------------------------------------------------------------
+  # The Virtual Network Gateway is the gateway that lives in Azure.
+  # This is the remote device to connect TO
+  # This task _will_ take ~20 minutes to complete.
+  #--------------------------------------------------------------------------
+
+    - name: Get Comfortable! ∆ ∆ ∆
+      ansible.builtin.debug:
+        msg: |
+           
+           ________
+            (    )
+             \../
+              )(     Creating the Virtual Network Gateway
+             /  \    takes approximately 20 minutes!
+            (::::)
+           --------
+
+    - name: Create virtual network gateway without BGP settings
+      azure_rm_virtualnetworkgateway:
+        resource_group: "{{ az_resource_group }}"
+        name: "{{ az_resource_group }}-vng"
+        ip_configurations:
+          - name: vpnipconfig
+            private_ip_allocation_method: Dynamic
+            public_ip_address_name: vpn-ip
+            subnet: GatewaySubnet
+        virtual_network: "{{ az_vn_name }}"
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+  #--------------------------------------------------------------------------
+  # The Local Network Gateway is the gateway that lives in YOUR network.
+  # This is the local VPN device to connect FROM
+  #--------------------------------------------------------------------------
+
+    - name: Create a Local Network Gateway
+      azure_rm_deployment:
+        resource_group: "{{ az_resource_group }}"
+        name: "LocalNetworkGateway"
+        template_link: 'https://isedemolab.com/endpoints/azure_lng.json'
+        parameters_link: 'https://isedemolab.com/endpoints/azure_lng.parameters.json'
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+    - name: Create a Local Network Gateway
+      azure_rm_deployment:
+        resource_group: "{{ az_resource_group }}"
+        name: "LocalNetworkGateway"
+        template_link: 'https://isedemolab.com/endpoints/azure_lng.json'
+        parameters_link: 'https://isedemolab.com/endpoints/azure_meraki_lng.parameters.json'
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+    - name: Create a Local Network Gateway 
+      azure_rm_deployment:
+        resource_group: "{{ az_resource_group }}"
+        name: "LocalNetworkGateway"
+        template_link: 'https://isedemolab.com/endpoints/azure_lng.json'
+        parameters_link: 'https://isedemolab.com/endpoints/azure_aws_lng.parameters.json'
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+    - name: Create a Local Network Gateway
+      azure_rm_deployment:
+        resource_group: "{{ az_resource_group }}"
+        name: "LocalNetworkGateway"
+        template_link: 'https://isedemolab.com/endpoints/azure_lng.json'
+        parameters_link: 'https://isedemolab.com/endpoints/azure_oci_lng.parameters.json'
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+  #--------------------------------------------------------------------------
+  # The Connection is the VPN Configuration for the Virtual Network
+  # Gateway.  You can use the Connection properties in Azure
+  # to download the configuration for your local VPN device.
+  #--------------------------------------------------------------------------
+
+    - name: Create a VPN Connection
+      azure_rm_deployment:
+        resource_group: "{{ az_resource_group }}"
+        name: "VPNConnection"
+        template_link: 'https://isedemolab.com/endpoints/azure_vpn.json'
+        parameters_link: 'https://isedemolab.com/endpoints/azure_vpn.parameters.json'
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+    - name: Create a VPN Connection
+      azure_rm_deployment:
+        resource_group: "{{ az_resource_group }}"
+        name: "VPNConnection"
+        template_link: 'https://isedemolab.com/endpoints/azure_vpn.json'
+        parameters_link: 'https://isedemolab.com/endpoints/azure_aws_vpn.parameters.json'
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+    - name: Create a VPN Connection
+      azure_rm_deployment:
+        resource_group: "{{ az_resource_group }}"
+        name: "VPNConnection"
+        template_link: 'https://isedemolab.com/endpoints/azure_vpn.json'
+        parameters_link: 'https://isedemolab.com/endpoints/azure_oci_vpn.parameters.json'
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+    - name: Create a VPN Connection
+      azure_rm_deployment:
+        resource_group: "{{ az_resource_group }}"
+        name: "VPNConnection"
+        template_link: 'https://isedemolab.com/endpoints/azure_vpn.json'
+        parameters_link: 'https://isedemolab.com/endpoints/azure_meraki_vpn.parameters.json'
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"    
+
+  #--------------------------------------------------------------------------
+  # Create a Route Table and associate it to your private subnet
+  #--------------------------------------------------------------------------
+
+    - name: Create a route table
+      azure_rm_routetable:
+        name: "rt_{{ az_vn_name }}"
+        resource_group: "{{ az_resource_group }}"
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+    - name: Associate route table to private subnet
+      azure_rm_subnet:
+        name: "Production"
+        virtual_network_name: "{{ az_vn_name }}"
+        resource_group: "{{ az_resource_group }}"
+        address_prefix_cidr: "{{ az_vn_private_subnet_cidr }}"
+        route_table: "rt_{{ az_vn_name }}"
+
+    - name: Create route from Azure to local network
+      azure_rm_route:
+        name: "RoutetoCSR"
+        resource_group: "{{ az_resource_group }}"
+        next_hop_type: virtual_network_gateway
+        address_prefix: "10.1.100.0/24"
+        route_table_name: "rt_{{ az_vn_name }}"
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+    - name: Your Azure network is Provisioned
+      ansible.builtin.debug:
+        msg: |
+          {{bar}}                g@                                                                             
+          {{bar}}               gll$                                                                            
+          {{bar}}              gllll$                                                                           
+          {{bar}}       ,     gllllll$      ,*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@Nw,         
+          {{bar}}    ,@P     gllllllll$     "Bw"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@N,     
+          {{bar}}   gP      gllllllllll$      "@,%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@g   
+          {{bar}}  @`      (llllllllllll@       %.]@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  
+          {{bar}} @`      /lllllF""*$llll@       $.%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
+          {{bar}}][      /ll@*`       "%ll$       @ @["%@"""$P"""]@@P"""*B@@@@@@@@@@@@@@@@@@@@@["%@@@@@@@C`@@@@K
+          {{bar}}@P      *"              "*`      @ @[ $, *N@P **$@@L @@p $",,"@ "  ` "@P , ]@@[ $@@@,,`$L ` "B@
+          {{bar}}$P                               @ @[ $@BN ]P BBB@@L @N` @ -gw@ ]@ ][ @ ]@  @@[ %BB` p ]L BN ]@
+          {{bar}}]@                               @ @@g@Npg@@bgggg@@bppg@@@@ggg@g@@g@@g@@ggg@@@@gggg@pgg@bggg@@K
+          {{bar}} @                              @h@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
+          {{bar}}  @                            gPg@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  
+          {{bar}}   %g                        ,@`g@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"   
+          {{bar}}    "Bg                    ,@Pg@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@P`     
+          {{bar}}       *Nw,             ,gP"g@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@BM*"         
+          {{bar}}          `*RNNgpggg@N*"                               
+          {{bar}}
+          {{bar}}                                 Your Network Environment is Now Set Up!

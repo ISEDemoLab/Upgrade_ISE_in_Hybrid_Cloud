@@ -1,0 +1,69 @@
+---
+- name: Configure FTP Repository on ISE node
+  gather_facts: false
+  hosts: localhost
+  vars_files:
+    - ../vars/main.yaml
+    - ../vars/banners.yaml
+
+  tasks:
+   
+  # ------------------------------------------------------------------------
+  # Create a repository from which you copy the public key file.
+  # CDROM and DISK repositories do not use the `userName` or `password`
+  # fields for the repository as shown in the DISK repository example.
+  # Supported Repository Types are:
+  # - CDROM
+  # - DISK
+  # - FTP
+  # - HTTP
+  # - HTTPS
+  # - NFS
+  # - SFTP
+  # - TFTP
+  # ------------------------------------------------------------------------
+
+    # - name: Create DISK Repository in ISE
+    #   cisco.ise.repository:
+    #     ise_hostname: "{{ upg_ppan }}"
+    #     ise_username: "{{ ise_username }}"
+    #     ise_password: "{{ ise_password }}"
+    #     ise_verify: "{{ ise_verify }}"
+    #     state: present
+    #     enablePki: false
+    #     name: ssh
+    #     # password: string # Not used for Disk repository
+    #     path: /
+    #     protocol: DISK
+    #     # serverName: string # Not used for Disk repository
+    #     # userName: string # Not used for Disk repository
+
+    - name: Create FTP Repository on vmware-admin
+      cisco.ise.repository:
+        ise_hostname: "vmware-admin.securitydemo.net" # FQDN or IP Address
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_init_password }}"
+        ise_verify: "{{ ise_verify }}"
+        state: present
+        enablePki: false
+        name: FTP
+        password: "{{ repo_password }}"
+        path: /
+        protocol: FTP
+        serverName: 10.1.100.6 # FQDN or IP Address
+        userName: "{{ repo_user }}" 
+
+    - name: Create FTP Repository on vmware-sadmin
+      cisco.ise.repository:
+        ise_hostname: "vmware-sadmin.securitydemo.net" # FQDN or IP Address
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_init_password }}"
+        ise_verify: "{{ ise_verify }}"
+        state: present
+        enablePki: false
+        name: FTP
+        password: "{{ repo_password }}"
+        path: /
+        protocol: FTP
+        serverName: 10.1.100.6 # FQDN or IP Address
+        userName: "{{ repo_user }}" 

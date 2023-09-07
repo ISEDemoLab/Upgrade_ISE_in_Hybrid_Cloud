@@ -1,0 +1,90 @@
+---
+- name: Install ISE Patch
+  gather_facts: false
+  hosts: localhost
+  # connection: local
+  vars_files:
+    - ../vars/main.yaml
+    - ../vars/banners.yaml
+
+  tasks:
+  
+  - name: Install 3.2 Patch 3 on azure-psn2
+    cisco.ise.patch_install:
+      ise_hostname: "azure-psn2.securitydemo.net"
+      ise_username: "{{ ise_username }}"
+      ise_password: "{{ ise_init_password }}"
+      ise_verify: "{{ ise_verify }}"
+      patchName: "ise-patchbundle-3.2.0.542-Patch3-23071904.SPA.x86_64.tar.gz"
+      repositoryName: FTP
+
+  - name: Install 3.2 Patch 3 on oci-psn2
+    cisco.ise.patch_install:
+      ise_hostname: "oci-psn2.securitydemo.net"
+      ise_username: "{{ ise_username }}"
+      ise_password: "{{ ise_init_password }}"
+      ise_verify: "{{ ise_verify }}"
+      patchName: "ise-patchbundle-3.2.0.542-Patch3-23071904.SPA.x86_64.tar.gz"
+      repositoryName: FTP
+
+  - name: Install 3.2 Patch 3 on aws-psn2
+    delegate_to: localhost
+    ansible.builtin.uri:
+      url: "https://aws-psn2.securitydemo.net/api/v1/patch/install"
+      method: POST
+      url_username: "{{ ise_username }}"
+      url_password: "{{ ise_init_password }}"
+      force_basic_auth: yes
+      body: |
+        { 
+          "isDirectoryListed": "true",
+          "patchName": "ise-patchbundle-3.2.0.542-Patch3-23071904.SPA.x86_64.tar.gz",
+          "repositoryName": "FTP"
+        }
+      status_code: [
+                    200,  # OK
+                    202,  # Patch installation triggered successfully
+                    400,  # Invalid input. A valid patch name and repository name should be provided as query parameters
+                    500,  # Internal server error
+                    ]
+      body_format: json
+      validate_certs: "{{ ise_verify }}"
+      return_content: true
+      timeout: 600 # in seconds (10 minutes)
+    register: response
+    failed_when: (response.status != 202) and (response.status != 500)
+
+  - name: Patch Installation Initialized
+    ansible.builtin.debug:
+      msg: |
+        {{bar}}           EEE,,,EEE
+        {{bar}}     ,E,,EEEEEEEEEEE,,E,
+        {{bar}}     ]EEEE^       `]EEEE
+        {{bar}}   ,,EEE      ]EEE   ]EE,,
+        {{bar}}  ]EEEE        `EEE,  ]EEEE     Patch installation has been initiated
+        {{bar}}    EEE  EE,    ,EEE   EEE
+        {{bar}}  ~EEEE  ]EEE,EEEEEE   *E       Be patient as the patch installs and the
+        {{bar}}  ]E*EE,   ]EEEEEEEEEE,         ISE nodes restart
+        {{bar}}     ]EEE,       *EEEEEE,
+        {{bar}}    ]EEEEEEEEEE,  *EEEEE
+        {{bar}}          ]EE***`    `^`
+
+  - name: 🛑 Pause for 3 Minutes to Upload Patch and Start Installation 🛑
+    ansible.builtin.pause:
+      seconds: 180
+  
+  # - name: Wait for ⬇ Reboot⬆
+  #   delegate_to: localhost
+  #   vars:
+  #     wait_timeout: "{{ 30 * 60 }}" # 1800s == 30 minutes per port
+  #   with_items:
+  #     - 443 # SSH/REST/API Gateway
+  #     - 80 # Admin UI redirect to 443
+  #     - 22 # SSH
+  #   ansible.builtin.wait_for:
+  #     host: "ise-azure2.securitydemo.net"
+  #     port: "{{ item }}"
+  #     state: stopped # Port is CLOSED
+  #     sleep: 3 # Default: 1. Seconds to sleep between checks. 💡 10 seconds is not fast enough to catch SSH???
+  #     timeout: "{{ wait_timeout }}" # Default: 300. Stop checking after <seconds>
+  #   ignore_errors: yes # Errors do not stop execution

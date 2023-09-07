@@ -1,0 +1,109 @@
+---
+- name: Install Docker
+  hosts: ipsk
+  become: yes
+  become_method: sudo
+  gather_facts: false
+  vars:
+    ansible_ssh_user: "{{ ise_username }}"
+    ansible_ssh_private_key_file: "{{ ssh_key_private_file }}"
+  vars_files:
+    - ../vars/linux.yaml
+
+  tasks:
+
+    - name: Update all packages to their latest version
+      ansible.builtin.apt:
+        name: "*"
+        state: latest
+      register: output
+
+    - name: Check if a reboot is required.
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+        get_md5: no
+      register: reboot_required_file
+
+    - name: Reboot the server (if required).
+      ansible.builtin.reboot:
+      when: reboot_required_file.stat.exists == true
+
+    - name: Remove dependencies that are no longer required.
+      ansible.builtin.apt:
+        autoremove: yes
+
+    - name: Install packages to allow `apt` to use a repository over HTTPS
+      ansible.builtin.apt:
+        force_apt_get: true
+        pkg:
+        - ca-certificates
+        - curl
+        - gnupg
+
+    - name: Add Dockers official GPG key
+      ansible.builtin.shell:
+        cmd: |
+          sudo install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+    - name: Set up the Docker Repository
+      ansible.builtin.shell:
+        cmd: |
+          echo \
+            deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/kyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+            $(. /etc/os-release && echo "$VERSION_CODENAME") stable | \
+            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    - name: Install Docker
+      ansible.builtin.apt:
+        name: docker
+
+    - name: Install Docker Compose
+      ansible.builtin.apt:
+        name: docker-compose
+
+    - name: Start service docker, if not started
+      ansible.builtin.service:
+        name: docker
+        state: started
+
+    - name: Enable service docker to launch on boot
+      ansible.builtin.service:
+        name: docker
+        enabled: yes
+
+    - name: Ensure group 'docker' exists
+      ansible.builtin.group:
+        name: docker
+        state: present
+
+    - name: Add the user 'iseadmin' to 'docker' group
+      ansible.builtin.user:
+        name: iseadmin
+        groups: docker
+        append: yes
+
+    - name: Restart service docker
+      ansible.builtin.service:
+        name: docker
+        state: restarted
+
+    - name: Docker has been installed
+      ansible.builtin.debug:
+        msg: |
+               ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣦⣦⣦⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢨⣯⣇⣇⢇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣦⣦⣦⠀⣦⣦⣦⣦⢀⣦⣦⣦⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢪⣇⣇⣇⠀⢯⣇⣇⣇⢀⣯⣇⣇⢇⠀⠀⠀⠀⠀⠀⠀⣰⣯⣧⣄⠀⠀⠀⠀⠀⠀
+            ⠀⠀⠀⠀⢠⣦⣦⣦⣄⣠⣦⣦⣦⠀⣦⣦⣦⣦⢠⣦⣦⣦⣄⢠⣦⣦⣦⢀⠀⢀⣯⣇⣇⣧⣆⢀⢀⢀⠀⠀
+            ⠀⠀⠀⠀⢸⣏⣇⣇⡃⢪⣇⣇⣇⠀⢫⣇⣇⣇⢀⣯⣇⣇⢇⢸⣇⣇⣇⠀⠀⠀⢫⣇⣇⣇⣯⣯⣯⣯⣯⡆
+            ⠀⢠⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣦⣮⣇⣇⣇⣇⣇⢏⠏⠁⠀
+            ⠀⢪⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⠃⠀⠀⠀⠀⠀⠀
+            ⠀⢸⣯⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⠃⠀⠀⠀⠀⠀⠀⠀
+            ⠀⠀⢫⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⢏⠁⠀⠀⠀⠀⠀⠀⠀⠀
+            ⠀⠀⠈⢫⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⠏⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+            ⠀⠀⠀⠀⠋⢯⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣇⣯⠏⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+            ⠀⠀⠀⠀⠀⠀⠈⠋⠋⢫⢫⢯⢯⢯⢯⢯⢯⢯⢏⠏⠏
+           
+             Docker has been installed on {{ inventory_hostname }}

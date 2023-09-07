@@ -1,0 +1,7 @@
+To: charlie@isedemolab.com
+From: ansible@isedemolab.com
+Subject: ⚠️⚠️ An error has been encountered! ⚠️⚠️
+
+⚠️⚠️ An error has been encountered! ⚠️⚠️
+
+An error has stopped your playbook from running!

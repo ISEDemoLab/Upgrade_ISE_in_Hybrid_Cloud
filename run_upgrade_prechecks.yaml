@@ -1,0 +1,360 @@
+---
+- name: Check the readiness of the 3.2 deployment for upgrade
+  gather_facts: false
+  hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars/main.yaml
+    - ../vars/banners.yaml
+    - ../vars/date_time.yaml
+
+  tasks:
+
+  #-----------------------------------------------------------------------
+  # Please refer to the `run_upgrade-prechecks.md` file in this 
+  # Git repository for detailed information on how to use these APIs
+  #
+  #-----------------------------------------------------------------------
+
+    - name: Run Upgrade pre-Checks on {{ upg_ppan }}
+      delegate_to: localhost
+      ansible.builtin.uri:
+        url: "https://{{ upg_ppan }}/api/v1/upgrade/prepare/pre-checks"
+        method: POST
+        url_username: "{{ ise_username }}"
+        url_password: "{{ ise_password }}"
+        force_basic_auth: yes
+        body: |
+          {
+            "bundleName": "{{ upgrade_bundle }}",
+            "hostnames": ["{{ upg_span }}"],
+            "patchBundleName": "",
+            "preChecks": [],
+            "reTrigger": "false",
+            "repoName": "{{ ise_repository_name }}",
+            "upgradeType": "SPLIT_UPGRADE"
+          }
+        status_code: [
+                      200,  # OK
+                      202,  # Prechecks initiated successfully
+                      400,  # Invalid input. Please provide valid inputs
+                      500,  # Internal server error
+                      ]
+        body_format: json
+        validate_certs: "{{ ise_verify }}"
+        return_content: true
+        timeout: 600 # in seconds (10 minutes)
+      register: response
+      failed_when: >
+        (response.json.response.message == "null") or
+        (response.msg == "'Status code was 400 and not [200]: HTTP Error 400: '") or
+        (response.status ==500) or
+        (response.status ==400)
+
+    - name: response.stdout
+      when:
+        - response is defined
+      ansible.builtin.debug:
+        var: response
+        # verbosity: 3
+
+    - name: 🛑 Pause for 45 Minutes to allow the preChecks to run 🛑
+      ansible.builtin.pause:
+        seconds: 2700
+  #-----------------------------------------------------------------------
+  # To adjust the time for the pause, here is a simple quick reference  
+  # 
+  #  1 minute  = 60
+  #  5 minutes = 300
+  # 10 minutes = 600
+  # 15 minutes = 900
+  #
+  # Adjust the time according to your needs (size of deployment, 
+  # size of database, etc.) Add times above together or figure out your own
+  # 17 minutes x 60 seconds = time in seconds
+  #-----------------------------------------------------------------------
+
+    - name: Set `PreCheckReportID` | 📋
+      when:
+        - response is defined
+        - response.failed == false
+      debug:
+        msg: "{{ response }}"
+    - ansible.builtin.set_fact:
+        PreCheckReportID: "{{ response.json.response.preCheckReportID }}"
+        ignore_errors: true
+
+  #-----------------------------------------------------------------------
+  # `GET` the results of the PreCheck Report and register it as a
+  # variable for this playbook {{ result }}.
+  #-----------------------------------------------------------------------
+
+    - name: Get status of pre-Checks on {{ upg_ppan }}
+      delegate_to: localhost
+      ansible.builtin.uri:
+        url: "https://{{ upg_ppan }}/api/v1/upgrade/prepare/get-status"
+        method: GET
+        url_username: "{{ ise_username }}"
+        url_password: "{{ ise_password }}"
+        force_basic_auth: yes
+
+        body: |
+          {
+            "preCheckReportID: "{{ PreCheckReportID }}"
+          }
+        status_code: [
+              200,  # OK
+              400,  # Invalid input. Please provide valid reportId
+              500,  # Internal server error
+              ]
+        body_format: json
+        validate_certs: "{{ ise_verify }}"
+        return_content: true
+        timeout: 600 # in seconds (10 minutes)
+      register: result
+      ignore_errors: true
+
+    - name: PreChecks Failure
+      when: 
+        - response is defined
+        - response.failed
+      block:
+      - name: ISE Upgrade PreChecks Failed
+        when: response.failed
+        ansible.builtin.shell:
+          cmd: "ssmtp charlie@isedemolab.com < ../notifications/error_encountered.txt"
+
+      - name: ⚠️ Upgrade PreChecks FAILED ⚠️
+        when:
+          - response is defined
+          - response.failed
+        ansible.builtin.debug:
+          msg: |
+            ⚠️
+            ⚠️     /\
+            ⚠️    /  \
+            ⚠️   / ❕ \    Upgrade PreChecks have FAILED!
+            ⚠️  /______\
+            ⚠️
+
+      - name: Send "beep" Notification
+        when: response.failed
+        ansible.builtin.shell:
+          cmd: "echo $'\a'"
+
+  #
+  # 💡 Blank lines (ASCII whitespace) in the pause prompt is trimmed by Ansible!
+  #    To maintain the empty line spacing in the prompt below, each of the lines
+  #    begins with a Unicode U+2003 Em Space [ ]!
+  #
+
+      - name: ⚠️⚠️ The ISE Upgrade PreChecks have FAILED! ⚠️⚠️
+        when: response.failed
+        ansible.builtin.pause:
+          prompt: |
+             
+             
+              █ 🚨 █████████████████████████████████████████████████████ 🚨 █
+              █ 🚨 █                                                   █ 🚨 █
+              █ 🚨 █ ⚠️⚠️  The ISE Upgrade PreChecks have FAILED  ⚠️⚠️ █ 🚨 █
+              █ 🚨 █ ⚠️⚠️  on vmware-sadmin                       ⚠️⚠️ █ 🚨 █
+              █ 🚨 █                                                   █ 🚨 █
+              █ 🚨 █            Press ↵ Enter to Continue              █ 🚨 █
+              █ 🚨 █                                                   █ 🚨 █
+              █ 🚨 █████████████████████████████████████████████████████ 🚨 █
+             
+             
+
+      - name: End the play for failed Upgrade PreChecks
+        ansible.builtin.meta: end_play
+        when:
+              - response is defined
+              - response.failed
+
+  #-----------------------------------------------------------------------
+  # Print the results of the PreCheck Report on the screen.
+  #-----------------------------------------------------------------------
+
+    - name: Review the PreCheck Report | Report ID {{ PreCheckReportID }}
+      when:
+        - result is defined
+        - result.failed == false
+      debug:
+        msg: "{{ result }}"
+
+    - name: Upgrade PreChecks Results
+      vars:
+        icons:
+          Success: '✅'
+          valid: '✅'
+          Failure: '❌'
+          fail: '❌'
+          in-progress: '⭕'
+          Warning: '⚠️'
+          timed-out: '⏱️'
+          Info: 'ℹ️'
+          expired: '🪦'
+          # Info: 'ⓘ'
+      ansible.builtin.pause:
+        seconds: 30 # 💡 Pause to allow the user to read the results of the Upgrade Precheck
+        prompt: |
+           
+           
+           In-Progress: ⭕   |   Informational: ℹ️
+           Success: ✅       |   Warning: ⚠️     |   Fail: ❌
+           Timed Out: ⏱️     |   Expired: 🪦
+           
+           {{ icons[result.json.preChecks[4].status] }} DNS                         {{ icons[result.json.preChecks[8].status] }} Load Average
+           {{ icons[result.json.preChecks[7].status] }} NTP               .         {{ icons[result.json.preChecks[2].status] }} Disk Corruption
+           {{ icons[result.json.preChecks[18].status] }} MDM              /|\        {{ icons[result.json.preChecks[11].status] }} Bundle Download
+           {{ icons[result.json.preChecks[1].status] }} Memory       @  /|||\  @    {{ icons[result.json.preChecks[15].status] }} Database Upgrade
+           {{ icons[result.json.preChecks[3].status] }} Platform    @  /|||||\  @   {{ icons[result.json.preChecks[13].status] }} Scheduled Backup
+           {{ icons[result.json.preChecks[9].status] }} Services    @  \|/ \|/  @   {{ icons[result.json.preChecks[12].status] }} PAN Auto Failover
+           {{ icons[result.json.preChecks[6].status] }} Disk Space   @.       .@    {{ icons[result.json.preChecks[16].status] }} Admin Certificate
+           {{ icons[result.json.preChecks[0].status] }} Repository    `Y@ @ @Y`     {{ icons[result.json.preChecks[5].status] }} System Certificates
+           {{ icons[result.json.preChecks[10].status] }} Deployment                  {{ icons[result.json.preChecks[17].status] }} Trusted Certificates
+                     {{ icons[result.json.preChecks[14].status] }} Configuration Backup
+           
+           
+
+  #-----------------------------------------------------------------------
+  # These next 4 steps will dynamically create files that will be used to 
+  # email the results of the Upgrade PreChecks.
+  #-----------------------------------------------------------------------
+
+    - name: Creating the PreCheck Report `.txt` File
+      ansible.builtin.file:
+        path: "../notifications/precheck_report.txt"
+        state: touch
+
+    - name: Creating the PreCheck Report `.json` File
+      ansible.builtin.file:
+        path: "../notifications/precheck_report.json"
+        state: touch
+
+    - name: Copy the report content to the file
+      ansible.builtin.copy:
+        dest: "../notifications/precheck_report.json"
+        content: |
+          {{ result.json }}
+
+    - name: Copy the report content to the file
+      vars:
+        icons:
+          Success: '✅'         # Emoji Icons
+          valid: '✅'
+          Failure: '❌'
+          fail: '❌'
+          in-progress: '⭕'
+          Warning: '⚠️'
+          Info: 'ℹ️'
+          expired: '🪦'
+          # Success: '☑'         # Unicode Icons
+          # valid: '☑'
+          # Failure: '✘'
+          # fail: '✘'
+          # in-progress: '◯'
+          # Warning: '⚠'
+          # Info: 'ⓘ'
+          timed-out: '⏱️'
+      ansible.builtin.copy:
+        dest: "../notifications/precheck_report.txt"
+        content: |
+          To: charlie@isedemolab.com
+          From: ansible@isedemolab.com
+          Subject: Your ISE 3.2 Upgrade Report Results
+           
+           The full report is attached to this email in JSON format.
+           
+           
+           In-Progress: ⭕   |   Informational: ℹ️  
+           Success: ✅       |   Warning: ⚠️      |   Fail: ❌
+           Timed Out: ⏱️     |   Expired: 🪦
+           
+           {{ icons[result.json.preChecks[4].status] }} DNS                         {{ icons[result.json.preChecks[8].status] }} Load Average
+           {{ icons[result.json.preChecks[7].status] }} NTP               .         {{ icons[result.json.preChecks[2].status] }} Disk Corruption
+           {{ icons[result.json.preChecks[18].status] }} MDM              /|\        {{ icons[result.json.preChecks[11].status] }} Bundle Download
+           {{ icons[result.json.preChecks[1].status] }} Memory       @  /|||\  @    {{ icons[result.json.preChecks[15].status] }} Database Upgrade
+           {{ icons[result.json.preChecks[3].status] }} Platform    @  /|||||\  @   {{ icons[result.json.preChecks[13].status] }} Scheduled Backup
+           {{ icons[result.json.preChecks[9].status] }} Services    @  \|/ \|/  @   {{ icons[result.json.preChecks[12].status] }} PAN Auto Failover
+           {{ icons[result.json.preChecks[6].status] }} Disk Space   @.       .@    {{ icons[result.json.preChecks[16].status] }} Admin Certificate
+           {{ icons[result.json.preChecks[0].status] }} Repository    `Y@ @ @Y`     {{ icons[result.json.preChecks[5].status] }} System Certificates
+           {{ icons[result.json.preChecks[10].status] }} Deployment                  {{ icons[result.json.preChecks[17].status] }} Trusted Certificates
+                     {{ icons[result.json.preChecks[14].status] }} Configuration Backup
+           
+           
+
+  #-----------------------------------------------------------------------
+  # To email the PreCheck Report Summary without attaching the `.json`
+  # file, uncomment this task and comment out the next task.
+  #-----------------------------------------------------------------------
+
+    # - name: Email the PreCheck Report File
+    #   ansible.builtin.shell:
+    #     cmd: "ssmtp charlie@isedemolab.com < ../notifications/precheck_report.txt"
+
+  #-----------------------------------------------------------------------
+  # The step below requires `swaks` to be installed on your linux box.
+  # This is a simple installation, check the `Readme.md` file on my
+  # GitHub for details (https://github.com/ISEDemoLab/Upgrade_ISE_in_Hybrid_Cloud/notifications)
+  #
+  # This allows us to use the files created above in s single email.
+  # The `precheck_report.txt` is used as the body of the email while
+  # `precheck_report.json` is attached to the email.
+  # The JSON file has too many characters on a single line to be added 
+  # to the email body without being truncated.
+  #
+  #-----------------------------------------------------------------------
+
+    - name: Email the PreCheck Report File
+      ansible.builtin.shell:
+        cmd: >
+          swaks -tlsc 
+          --to charlie@isedemolab.com 
+          --from ${EMAIL_FROM} 
+          --server ${EMAIL_SERVER} 
+          --port ${EMAIL_PORT} 
+          --auth LOGIN 
+          --auth-user ${EMAIL_USER} 
+          --auth-password ${EMAIL_PASSWORD} 
+          --auth-hide-password 
+          --header "Subject: Your ISE 3.2 Upgrade Report Results" 
+          --header "Content-Type: text/plain; charset=UTF-8" 
+          --body @../notifications/precheck_report.txt 
+          --attach @../notifications/precheck_report.json 
+          --attach-name precheck_report.json
+
+    - name: Prechecks have finished
+      when:
+        - result is defined
+        - result.failed == false
+      ansible.builtin.pause:
+        seconds: 3
+        prompt: |
+           
+           
+                                  ⠀⠀⣀⣤⣶⣶⣿⣿⣿⣿⣿⣿⣿⣿⣷⣶⣤⣀⠀⠀⢀⣤⠀⠀⠀⠀⠀
+                          ⠀⠀⠀⠀⠀⠀⣠⣶⣿⣿⠛⠉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⢿⣿⣷⣬⣿⣷⠀⠀⠀⠀⠀
+                          ⠀⠀⠀⠀⣤⣿⣿⠋⠀⠀⠀⠀⠀⠀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⣯⣿⣿⣿⠀⠀⠀⠀⠀
+                          ⠀⠀⢠⣿⣿⠋⠀⠀⠀⠀⠀⣶⣿⣿⣿⣿⣄⣀⣀⣠⣾⣿⣿⣦⣀⠉⠉⠉⠉⠁⠀⠀⠀⠀⠀⠀
+                          ⠀⢠⣿⡿⠀⠀⠀⠀⠀⠀⠀⣹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠃
+                          ⢀⣿⣿⠀⠀⠀⢀⣤⣤⣤⣿⣿⣿⣿⠟⠋⠉⠉⠉⠛⢿⣿⣿⣿⣷⡀⠀⠀⠀⠀⠀⢠⣿⣦
+                          ⣸⣿⡇⠀⠀⠀⣿⣿⣿⣿⣿⣿⠟⠀⠀⠀   ⠀⠀⠀⢻⣿⣿⣿⣿⣿⣧⠀⠀⠀⣿⣿⡀
+                          ⣿⣿⠀⠀⠀⠀⠛⣿⣿⣿⣿⣿⠀⠀⠀⣴⣿⣿⣿⣦⠀⠀⠀⣿⣿⣿⣿⣿⣿⠀⠀⠀⢸⣿⣇
+                          ⢻⣿⡄⠀⠀⠀⠀⠀⣿⣿⣿⣿⠀⠀⠀⠙⣿⣿⣿⠋⠀⠀⠀⣿⣿⣿⡟⠉⠀⠀⠀⠀⢸⣿⡇
+                          ⠈⣿⣷⠀⠀⠀⠀⢀⣾⣿⣿⣿⣷⡀⠀⠀⠀⠀⠀⠀⠀⢀⣾⣿⣿⣿⠀⠀⠀⠀⠀⠀⣾⣿⠃
+                          ⠀⠙⠛⠀⠀⠀⠀⢿⣿⣿⣿⣿⣿⣿⣷⣦⣤⣤⣤⣶⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⢠⣿⣿⠀
+                          ⠀⠀⠀⠀⠀⠀⠀⠀⠙⠟⠛⠉⠛⢿⣿⣿⣿⣿⣿⣿⣿⠿⠻⣿⣿⡿⠁⠀⠀⠀⣠⣿⣿⠀⠀
+                          ⠀⠀⠀⠀⠀⣤⣤⣤⣤⣤⡄⠀⠀⠀⢹⣿⣿⣿⣿⠃⠀⠀⠀⠀⠀⠀⠀⠀⢀⣾⣿⠟⠀⠀⠀
+                          ⠀⠀⠀⠀⠀⣿⣿⣿⣯⣁⠀⠀⠀⠀⠀⠉⠉⠉⠉⠀⠀⠀⠀⠀⠀⠀⣠⣾⣿⠟⠁⠀⠀⠀⠀
+                          ⠀⠀⠀⠀⠀⣿⣿⠉⠛⣿⣿⣶⣤⣤⣀⢀⠀⠀⠀⢀⣀⣀⣤⣴⣾⣿⠿⠋⠀⠀⠀⠀⠀⠀⠀
+                          ⠀⠀⠀⠀⠀⠀⠉⠀⠀⠀⠀⠉⠙⠛⠿⢿⣿⣿⣿⠿⠿⠛⠛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+           
+                       The Upgrade Prechecks report has successfully run.
+             Please REVIEW the results to determine if remediation actions are needed.
+
+    - name: End the play if the `"DB_UPGRADE_CHECK"` fails
+      ansible.builtin.meta: end_play
+      when:
+            - result is defined
+            - result.json.preChecks[15].status == 'Failure'

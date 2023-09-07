@@ -1,0 +1,13 @@
+To: charlie@isedemolab.com
+From: ansible@isedemolab.com
+Subject: Iteration 1 of the ISE 3.3 Upgrade Project has completed.
+
+The following nodes have been removed from the ISE 3.2 deployment and destroyed.  New ISE 3.3 nodes have been installed and joined to vmware-sadmin to create an ISE 3.3 deployment.
+
+
+
+    ROLE                   Hostname       Node Group
+|----------------------|---------------|---------------|
+- PSN                    azure-psn        WestUS
+- PSN/pxGrid             oci-psn          CentralUS
+- PSN/Device Admin       aws-psn          EastUS

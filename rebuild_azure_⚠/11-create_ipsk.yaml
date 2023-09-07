@@ -1,0 +1,102 @@
+---
+- name: Create an Ubuntu Instance in Azure
+  gather_facts: false
+  hosts: localhost
+  connection: local
+  vars_files:
+    - ~/Upgrade_ISE_in_Hybrid_Cloud/vars/main.yaml
+    - ~/Upgrade_ISE_in_Hybrid_Cloud/vars/banners.yaml
+
+#--------------------------------------------------------------------------
+# This role will create a local ssh public key pair and name it the
+# same as the project name.
+#--------------------------------------------------------------------------
+
+  # roles:
+  #   - role: ssh_key_local
+  #     vars:
+  #       ssh_key_name: "{{ project_name }}"
+
+#--------------------------------------------------------------------------
+# 💡To configure Azure for API access and to allow Ansible to configure
+# modules, create an Azure service principal.
+# 🛈 Instructions can be found at:
+# https://learn.microsoft.com/en-us/azure/developer/ansible/create-ansible-service-principal?tabs=azure-cli
+#
+#--------------------------------------------------------------------------
+# This playbook will create a local SSH Key, then move on to create a
+# Resource Group (RG), Virtual Network (VN), Security Group (SG),
+# and two subnets (Private and Gateway).  The SG will be assigned to
+# the private subnet.
+#
+#--------------------------------------------------------------------------
+
+  tasks:
+
+    - name: Create a network interface with private IP address only (no Public IP)
+      azure_rm_networkinterface:
+        name: ipsk-nic
+        resource_group: "{{ az_resource_group }}"
+        virtual_network: "{{ az_vn_name }}"
+        subnet_name: "{{ az_private_subnet }}"
+        create_with_security_group: True
+        security_group: "{{ az_security_group }}"
+        ip_configurations:
+          - name: ipsk_ipconfig
+            primary: True
+            private_ip_allocation_method: Static
+            private_ip_address: "192.168.100.7"
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+    - name: Create an Ubuntu VM and attach to NIC
+      azure_rm_virtualmachine:
+        resource_group: "{{ az_resource_group }}"
+        name: "ipsk"
+        vm_size: Standard_D2s_v3
+        managed_disk_type: Standard_LRS
+        admin_username: "{{ ise_username }}"
+        admin_password: "{{ ise_password }}"
+        boot_diagnostics:
+          enabled: yes
+          storage_account: chmoretosa
+        network_interfaces: ipsk-nic
+        ssh_public_keys:
+          - path: /home/iseadmin/.ssh/authorized_keys # Destination path for SSH public keys is currently limited to its default value /home/iseadmin/.ssh/authorized_keys  due to a known issue in Linux provisioning agent.
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7oKLotV3rjAgYJCe41OSwaW5pNMeaSol+KyXfVYpgJm1AQD0iy6HMMxdlgs9bEJhSE52YZ5B2WnydInIEAoEDtgjpHh5RUwK4v4agyOmkVaGBdqvvXvd+BEF9AbUvT1poum8bC9OrVVCHavR2ESPK2zoJhdh8Pqmb1pelkPMVzcYbtxi0KmwUBMidpf/RNMc7IAfHVlprvS8aNL46rA4uSWKHoxHwAasQ3Z9N80ZuST9eqcfbILlXAuNR6ydaQdiN21tKQ9oaVNYTKPlvfnDIwMhzcWXag3mbYAosqTAtRtSUM9VewYFjTD88y7lM9GzJC7vVe8KWzpVmU1g4FdWO33EZE9X8BuOWHJv1buPLbXfB8bMgS8uGTaavixvLwLYhU/LaSVkhNXmkX5XyANpHerEeFJmNlnzBM2qkA8xY5nVBziA9u5Uu9vF5C5r/SWt1P3F6SxrjsEE0vMaJXmc+UTHwwK1HUoEy2f/GnOq7A5fDrX56DPIdp4MFS4k9N8c= charlie@DESKTOP-78MC7J7"
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts-gen2
+          version: latest
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+
+
+    - name: Your ipsk instance is Provisioned
+      ansible.builtin.debug:
+        msg: |
+          {{bar}}             ,gg@@@@$$$@@%gg,
+          {{bar}}         ,g@$$$$$$$$$$$$$$$$$$@g,
+          {{bar}}       g@$$$$$$$$$$$$$$$$$F"*%$$$@g
+          {{bar}}     g$$$$$$$$$$$$$%%%%$$     ]$$$$$k
+          {{bar}}   ,@$$$$$$$$$M$        'k   ,@$$$$$$@,
+          {{bar}}  ,@$$$$$$$$"   $,,,,,,,   "`"$$$$$$$$$,
+          {{bar}}  @$$$$$$$@    ,@$$$$$$$$&,    ]$$$$$$$$
+          {{bar}} ]$$$$$%$$    g$$$$$$$$$$$$k    $$$$$$$$k
+          {{bar}} +$$$     @  ]$$$$$$$$$$$$$$k,,,J$$$$$$$$
+          {{bar}} $$$$     $  ]$$$$$$$$$$$$$$F``"]$$$$$$$$
+          {{bar}} ]$$$$@&@$    %$$$$$$$$$$$$$    +$$$$$$$F
+          {{bar}}  $$$$$$$$k    "%$$$$$$$$$"    g$$$$$$$$
+          {{bar}}  '$$$$$$$$@,   @"""**^"   ,,,@$$$$$$$$F
+          {{bar}}   '$$$$$$$$$@g@`       ,F`  "$$$$$$$$`
+          {{bar}}     1$$$$$$$$$$$@@ggg&@@     ]$$$$$F
+          {{bar}}       1$$$$$$$$$$$$$$$$$@w,,g$$$$F`
+          {{bar}}         "4$$$$$$$$$$$$$$$$$$$$k"
+          {{bar}}             "*%%$$$$$$$$$%*"                               
+          {{bar}}
+          {{bar}}      Your Ubuntu VM is Now Set Up!

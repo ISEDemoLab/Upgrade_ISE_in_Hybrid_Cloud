@@ -1,0 +1,44 @@
+---
+- name: Delete ISE 3.2 PSN from Azure
+  gather_facts: false
+  hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars/main.yaml
+    - ../vars/banners.yaml
+
+  tasks:
+
+    - name: Delete azure-psn2 💀 | 🕑 ~125s
+      azure_rm_virtualmachine:
+        resource_group: "{{ az_resource_group }}"
+        name: azure-psn2
+        remove_on_absent: all_autocreated
+        state: absent
+
+    - name: Skynet (a division of Cyberdyne Systems) Thanks You! 🖧
+      ansible.builtin.debug:
+        msg: |
+                                                  ,,                                        
+                                                ,####,                                      
+                                              ,########,                                    
+                                            ,############,                                 
+                                          ,################,                               
+                                        '####################'                              
+                                     .#.  '################'  .#.                           
+                                   ,#####,  '############'  ,#####,                        
+                                 ,##########,  "######"  ,##########,                      
+                               ,##############,  "##"  ,##############,                    
+                             ,##################,    ,##################,                  
+                           ,######################  ######################,               
+                         ,########################  ########################,             
+                       ,##########################  ##########################,           
+                     ,############################  ############################,         
+                   ,##############################  ##############################,       
+                                                                                           
+                  #@NNNNNNNNN ]$F ,g@$M @@      ]@F j@@@g    $@ @NNNNNNN% %%N$ @N&N
+                  ]@@@@@@@@@m,]$@@@"    %&@@@@@@@$F ]$ "%$g  $@ @@@@@@@@@    ][           
+                  ,ggggggggg$']$["*%@g,   yyyyyyy$F ]$    %Q@@@ @wwwwwwgw    ][            
+                   "```"````` `"`    ```  `""""'``  ``      '`  ``"``````    ``   
+           
+                                   This instance has been TERMINATED

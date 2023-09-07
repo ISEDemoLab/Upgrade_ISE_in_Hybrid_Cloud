@@ -1,0 +1,23 @@
+To: charlie@isedemolab.com
+From: ansible@isedemolab.com
+Subject: Your ISE 3.2 Upgrade Report Results
+ 
+ The full report is attached to this email in JSON format.
+ 
+ 
+ In-Progress: ⭕   |   Informational: ℹ️  
+ Success: ✅       |   Warning: ⚠️      |   Fail: ❌
+ Timed Out: ⏱️     |   Expired: 🪦
+ 
+ ⚠️ DNS                         ✅ Load Average
+ ✅ NTP               .         ✅ Disk Corruption
+ ✅ MDM              /|\        ✅ Bundle Download
+ ✅ Memory       @  /|||\  @    ❌ Database Upgrade
+ ❌ Platform    @  /|||||\  @   ℹ️ Scheduled Backup
+ ✅ Services    @  \|/ \|/  @   ✅ PAN Auto Failover
+ ✅ Disk Space   @.       .@    ✅ Admin Certificate
+ ✅ Repository    `Y@ @ @Y`     ✅ System Certificates
+ ✅ Deployment                  ✅ Trusted Certificates
+           ❌ Configuration Backup
+ 
+ 
