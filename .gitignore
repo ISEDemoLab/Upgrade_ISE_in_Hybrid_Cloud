@@ -3,6 +3,7 @@
 .venv
 .cert
 .json
+.vscode
 env/
 venv/
 ENV/
