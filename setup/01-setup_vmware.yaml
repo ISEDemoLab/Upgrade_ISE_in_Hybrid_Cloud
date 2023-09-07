@@ -53,21 +53,8 @@
         validate_certs: no
         properties:
           DeploymentOption.value: 'small' # For this OVA, the values are Eval, PSN_Lite, small, medium
-      async: 45
-      poll: 0
-      # delegate_to: localhost
-
-    - name: Deploy OVA to ESXi Server to be the Secondary Admin Node ⏳ | 🕑 ~25m
-      community.vmware.vmware_deploy_ovf:
-        datastore: '{{ datastore }}'
-        name: vmware-sadmin
-        networks: "{u'VM Network':u'{{ ProvisioningNetworkLabel }}'}"
-        power_on: no
-        ovf: "{{ ise32_ovf }}"
-        wait_for_ip_address: true
-        validate_certs: no
-        properties:
-          DeploymentOption.value: 'small' # For this OVA, the values are Eval, PSN_Lite, small, medium
+      # async: 45
+      # poll: 0
       # delegate_to: localhost
 
     #--------------------------------------------------------------------------
@@ -78,10 +65,9 @@
     # `unit_number`
     #--------------------------------------------------------------------------
 
-    - name: Add ZTP info to VM
+    - name: Add ZTP info to {{ upg_ppan }}
       community.vmware.vmware_guest:
         validate_certs: no
-        # folder: '[{{ datastore }}]/vmware-admin/'
         name: vmware-admin
         state: present
         cdrom:
@@ -112,20 +98,20 @@
           {{bar}}
           {{bar}}                Your Primary Admin Node has been deployed!
           
-    # - name: Deploy OVA to ESXi Server to be the Secondary Admin Node ⏳ | 🕑 ~25m
-    #   community.vmware.vmware_deploy_ovf:
-    #     datastore: '{{ datastore }}'
-    #     name: vmware-sadmin
-    #     networks: "{u'VM Network':u'{{ ProvisioningNetworkLabel }}'}"
-    #     power_on: no
-    #     ovf: "{{ ise32_ovf }}"
-    #     wait_for_ip_address: true
-    #     validate_certs: no
-    #     properties:
-    #       DeploymentOption.value: 'small' # For this OVA, the values are Eval, PSN_Lite, small, medium
+    - name: Deploy OVA to ESXi Server to be the Secondary Admin Node ⏳ | 🕑 ~25m
+      community.vmware.vmware_deploy_ovf:
+        datastore: '{{ datastore }}'
+        name: vmware-sadmin
+        networks: "{u'VM Network':u'{{ ProvisioningNetworkLabel }}'}"
+        power_on: no
+        ovf: "{{ ise32_ovf }}"
+        wait_for_ip_address: true
+        validate_certs: no
+        properties:
+          DeploymentOption.value: 'small' # For this OVA, the values are Eval, PSN_Lite, small, medium
     #   delegate_to: localhost
 
-    - name: Add ZTP info to VM
+    - name: Add ZTP info to {{ upg_span }}
       community.vmware.vmware_guest:
         validate_certs: no
         name: vmware-sadmin
