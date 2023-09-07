@@ -7,7 +7,7 @@
 env/
 venv/
 ENV/
-rebuild_azure/
+rebuild_azure_⚠/
 
 # Git
 .git
