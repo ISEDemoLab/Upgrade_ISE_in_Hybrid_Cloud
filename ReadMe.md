@@ -22,6 +22,19 @@ The Ansible playbook folders in this repository are listed in this table with th
 
 To use Zero Touch Provisioning (ZTP) with VMware, you need to have an understanding of this article:  [ISE Zero Touch Provisioning (ZTP)](https://community.cisco.com/t5/security-knowledge-base/ise-zero-touch-provisioning-ztp/ta-p/4541606)
 
+## Process
+
+The order of operations for upgrading the 3.2 deployment to 3.3 is as follows.  This is the order listed in the `upgrade.yaml` playbook.
+
+```mermaid
+flowchart TD;
+    A[`run_upgrade_prechecks.yaml`] --> B[`admin_1/secondary_admin.yaml`];
+    B --> C[`iteration_1/main.yaml`];
+    C --> D[`iteration_2/main.yaml`];
+    D --> E[`admin_2/primary_admin.yaml`];
+    E --> F[Upgrade Complete!]
+```
+
 ## Goals
 
 There were two goals for this project :
