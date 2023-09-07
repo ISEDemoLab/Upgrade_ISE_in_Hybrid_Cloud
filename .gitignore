@@ -11,6 +11,7 @@ rebuild_azure_⚠/
 
 # Git
 .git
+.gitignore
 
 # macOS
 .DS_Store
