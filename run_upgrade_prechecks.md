@@ -1,6 +1,6 @@
 # Upgrade_ISE_in_Hybrid_Cloud/run_upgrade_prechecks.md
 
-This is a **BIG** topic, but will contain a detailed explanation of the use of the following APIs:
+This is a **BIG** topic, but this ReadMe will contain a detailed explanation of the use of the following APIs:
 
 - `POST` request for `https://{{ upg_ppan }}/api/v1/upgrade/prepare/pre-checks`
 - `GET` request for `https://{{ upg_ppan }}/api/v1/upgrade/prepare/get-status`
