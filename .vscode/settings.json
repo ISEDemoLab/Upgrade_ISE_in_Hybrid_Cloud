@@ -1,7 +1,0 @@
-{
-    "editor.inlineSuggest.suppressSuggestions": true,
-    "editor.inlineSuggest.enabled": false,
-    "editor.acceptSuggestionOnCommitCharacter": false,
-    "editor.snippetSuggestions": "none",
-    "editor.suggest.selectionMode": "never"
-}
