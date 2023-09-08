@@ -14,7 +14,7 @@ This folder is the first to be run in the Upgrade process.  It contains all the 
 
 This folder of Playbooks will remove the Secondary Admin Node from the ISE 3.2 Patch 3 deployment and install an new 3.3 standalone node, then a backup will be created from the 3.2Patch3 deployment and restored onto the 3.3 `vmware-sadmin` node.
 
-```sh
+
 ```mermaid
 flowchart LR
     subgraph 3.2P3
@@ -51,7 +51,6 @@ flowchart LR
       end
     end
     3.2P3-->3.3
-```
 ```
 
 ## License
