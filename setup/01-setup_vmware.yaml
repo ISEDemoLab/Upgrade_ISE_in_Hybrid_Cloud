@@ -8,23 +8,11 @@
     - ../vars/banners.yaml
 
 #--------------------------------------------------------------------------
-# This playbook Deploy ISE to an ESXi Host, attach the ztp.iso, and
+# This playbook will Deploy ISE to an ESXi Host, attach the ztp.iso, and
 # power on the VM
 #--------------------------------------------------------------------------
 
   tasks:
-
-    #--------------------------------------------------------------------------
-    # 🛈 The `PyVmomi` package is required to run this module.
-    # Un-comment the `Install Python PyVmomi Package` task below to
-    # install it.
-    #--------------------------------------------------------------------------
-
-    # - name: Install Python PyVmomi Package
-    #   delegate_to: localhost
-    #   ansible.builtin.pip:
-    #     name: PyVmomi
-    #     executable: pip3
 
     #--------------------------------------------------------------------------
     # The example shown here is to install to an ESXi host, you can
@@ -53,9 +41,7 @@
         validate_certs: no
         properties:
           DeploymentOption.value: 'small' # For this OVA, the values are Eval, PSN_Lite, small, medium
-      # async: 45
-      # poll: 0
-      # delegate_to: localhost
+      delegate_to: localhost
 
     #--------------------------------------------------------------------------
     # Attach the ztp.iso to the VM using the full datastore path
@@ -109,7 +95,7 @@
         validate_certs: no
         properties:
           DeploymentOption.value: 'small' # For this OVA, the values are Eval, PSN_Lite, small, medium
-    #   delegate_to: localhost
+      delegate_to: localhost
 
     - name: Add ZTP info to {{ upg_span }}
       community.vmware.vmware_guest:

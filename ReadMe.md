@@ -19,6 +19,9 @@ The Ansible playbook folders in this repository are listed in this table with th
 |templates/|JSON template files for Azure Resource Manager Deployments|
 |vars/|Files used to create variables referenced throughout the Playbooks|
 |ztp/|Files used to create the ZTP configuration for ISE nodes installed on VMware|
+|run_upgrade_prechecks.md|Detailed instructions for the Upgrade PreChecks APIs|
+|run_upgrade_prechecks.yaml|Run the Upgrade PreChecks and return the status of them|
+|upgrade.yaml|Upgrade your ISE 3.2 Patch 3 deployment to ISE 3.3|
 
 To use Zero Touch Provisioning (ZTP) with VMware, you need to have an understanding of this article:  [ISE Zero Touch Provisioning (ZTP)](https://community.cisco.com/t5/security-knowledge-base/ise-zero-touch-provisioning-ztp/ta-p/4541606)
 
@@ -28,12 +31,14 @@ The order of operations for upgrading the 3.2 deployment to 3.3 is as follows.  
 
 ```mermaid
 flowchart TD;
-    A[`run_upgrade_prechecks.yaml`] --> B[`admin_1/secondary_admin.yaml`];
-    B --> C[`iteration_1/main.yaml`];
-    C --> D[`iteration_2/main.yaml`];
-    D --> E[`admin_2/primary_admin.yaml`];
-    E --> F[Upgrade Complete!]
+    A["`run_upgrade_prechecks.yaml`"] --> B["`admin_1/secondary_admin.yaml`"];
+    B --> C["`iteration_1/main.yaml`"];
+    C --> D["`iteration_2/main.yaml`"];
+    D --> E["`admin_2/primary_admin.yaml`"];
+    E --> F["Upgrade Complete!"]
 ```
+
+The `upgrade.yaml` file executes the Plays necessary to carry out this process.  See [Run multiple playbooks sequentially](#1) for more information.
 
 ## Goals
 
@@ -231,6 +236,33 @@ Edit the project and deployment settings in `vars/main.yaml` to match your envir
 
 ```yaml
 project_name: Upgrade_ISE_in_Hybrid_Cloud
+```
+
+## Run multiple playbooks sequentially {#1}
+
+```yaml
+ansible-playbook upgrade.yaml
+```
+
+Contents of upgrade.yaml. Each playbook will finish before moving on to the next. You can skip a playbook by commenting it out (add `# ` before the entry).
+
+I use this method to consistently upgrade my 8-node 3.2 Patch 3 deployment to 3.3 in **6 hours 40 minutes**.
+
+```yaml
+
+---
+- name: Upgrade Secondary Admin Node
+  ansible.builtin.import_playbook: admin_1/secondary_admin.yaml
+
+- name: Upgrade Iteration 1 PSNs
+  ansible.builtin.import_playbook: iteration_1/main.yaml
+
+- name: Upgrade Iteration 2 PSNs
+  ansible.builtin.import_playbook: iteration_2/main.yaml
+
+- name: Upgrade Primary Admin Node
+  ansible.builtin.import_playbook: admin_2/primary_admin.yaml
+
 ```
 
 ## License

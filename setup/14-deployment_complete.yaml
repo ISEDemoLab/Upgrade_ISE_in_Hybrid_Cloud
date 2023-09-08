@@ -12,6 +12,16 @@
       ansible.builtin.shell:
         cmd: "ssmtp charlie@isedemolab.com < ../notifications/32_deployment_done.txt"
 
+    - name: Send Push Notification
+      ansible.builtin.shell:
+        cmd: |
+          curl \
+            -H "Title: Your 3.2 deployment has successfully been provisioned" \
+            -H "Priority: urgent" \
+            -H "Tags: biohazard,skull" \
+            -d "Before anything else, please log in to the WebGUI" \
+            ntfy.sh/ise-ansible 
+
     - name: Your ISE 3.2 Deployment is Complete!! 🤍
       ansible.builtin.debug:
         msg: |

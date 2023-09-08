@@ -78,7 +78,7 @@ While the initial Split Upgrade data would be
 
 Notice that the only difference is that the hostnames for the nodes to check in this iteration are listed.  What I found, though, is that `hostnames` in this case actually means "FQDN of the host you would like to check". Since I am ultimately performing a Backup and Restore upgrade, all I want to check is my Secondary PAN `vmware-sadmin.securitydemo.net`.
 
-Whether it's the `hostnames` attribute or the `preChecks`, the value of `[]` means ALL.  In these instances it would be ALL `hostnames` or ALL `preChecks`.
+Whether it's the `hostnames` attribute or the `preChecks`, the value of `[]` is None.  In this API if no `hostnames` or `preChecks` are specified the default would be ALL.  In these instances it would be ALL `hostnames` or ALL `preChecks`.
 
 The response  to this API should be similar to
 
