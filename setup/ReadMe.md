@@ -24,18 +24,45 @@ This folder is composed of the playbooks used to provision the initial ISE 3.2 d
 
 I have PLAYS that show how to enable `PubkeyAuthentication` on ISE nodes in case you did not enable this through the ZTP process.  I _HIGHLY_ suggest you use this method to connect to ISE via SSH.  Not only is it more secure, but it allows the same mechanism to be used to SSH to ISE whether it exists on-prem or in the cloud.
 
-## Run multiple playbooks sequentially:
+This is the resulting ISE 3.2Patch3 deployment from running this Playbook.
+```mermaid
+flowchart LR
+    subgraph 3.2P3
+      direction TB
+      subgraph Admin Nodes
+        direction LR
+        vmware-admin ~~~ vmware-sadmin
+      end
+      subgraph PSNs
+        direction LR
+        subgraph WestUS
+          direction TB
+          azure-psn ~~~ azure-psn2
+        end
+        subgraph EastUS
+          direction TB
+          aws-psn ~~~ aws-psn2
+        end
+        subgraph CentralUS
+          direction TB
+          oci-psn ~~~ oci-psn2
+        end
+      end
+    end
+    vmware-admin & vmware-sadmin --> aws-psn & aws-psn2 & azure-psn & azure-psn2 & oci-psn & oci-psn2
+```
 
-```sh
+## Run multiple playbooks sequentially:
+```
 ansible-playbook setup/create.yaml
 ```
 
-Contents of setup/create.yaml. Each playbook will finish before moving on to the next. You can skip a playbook by commenting it out (add `# ` before the entry). You can see that I import playbooks from other folders as well.  This way, I don't need more than one copy of a Playbook if all the settings are the same.
+Contents of setup/create.yaml. Each playbook will finish before moving on to the next. You can skip a playbook by commenting it out (add `# ` before the entry). You can see that I import playbooks from other folders as well.  This way, I don't need more than one copy of a Playbook if all the settings are the same. 
 
 I use this method to consistently initialize this 8-node deployment in **3 hours 25 minutes**.
 
-```create.yaml
---- create.yaml
+``` create.yaml
+---
 - name: Deploy Azure PSNs (ISE 3.2)
   ansible.builtin.import_playbook: 02-setup_azure.yaml
   tags: [ise32,azure,install]
@@ -126,6 +153,7 @@ I use this method to consistently initialize this 8-node deployment in **3 hours
 - name: Deployment Complete!
   ansible.builtin.import_playbook: 14-deployment_complete.yaml
 ```
+
 
 ## License
 

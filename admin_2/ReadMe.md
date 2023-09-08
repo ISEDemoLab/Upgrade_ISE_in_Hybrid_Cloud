@@ -17,6 +17,35 @@ This folder is the last to be run in the Upgrade process.  It contains all the P
 
 Upgrading ISE using Backup and Restore will result in the original Secondary Policy Admin Node (SPAN) in the role of the Primary Policy Admin Node (PPAN) for the upgraded deployment.  To overcome this, `06-promote_to_primary.yaml` is used to restore the roles to their original configurations.
 
+This folder of Playbooks will deregister the 3.2Patch3 deployment from Cisco Smart Licensing, destroy the remaining Admin Node and install a new 3.3 Admin Node.  It will be added to the 3.3 deployment, promoted to the Primary Admin Node, certificates will be installed and the 3.3 deployment will be registered to the Cisco Smart Licensing Server.
+
+```mermaid
+flowchart LR
+    subgraph 3.3
+      direction TB
+      subgraph Admin Nodes2[Admin Nodes]
+        direction LR
+        vmware-admin ~~~ vmware-sadmin
+      end
+      subgraph PSNs2[PSNs]
+        direction LR
+        subgraph WestUS2[WestUS]
+          direction TB
+          azure-psn ~~~ azure-psn2
+        end
+        subgraph EastUS2[EastUS]
+          direction TB
+          aws-psn ~~~ aws-psn2
+        end
+        subgraph CentralUS2[CentralUS]
+          direction TB
+          oci-psn ~~~ oci-psn2
+        end
+      end
+    end
+    vmware-admin & vmware-sadmin --> aws-psn & aws-psn2 & azure-psn & azure-psn2 & oci-psn & oci-psn2
+```
+
 ## License
 
 MIT

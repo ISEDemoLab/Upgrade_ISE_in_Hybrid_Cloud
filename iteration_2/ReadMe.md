@@ -19,6 +19,42 @@ This folder is the third to be run in the Upgrade process.  It contains all the 
 |13-iteration_1_complete.yaml|Visual and email notification that this iteration is complete|
 |main.yaml|Uses `ansible.builtin.import_playbook` to run all the necessary Playbooks|
 
+This folder of Playbooks will remove the remaining PSNs from the ISE 3.2 Patch 3 deployment and install new 3.3 PSNs with the same hostnames and IP addresses then  adds them to the Node Groups
+
+```mermaid
+flowchart LR
+    subgraph 3.2P3
+      direction TB
+      subgraph Admin Nodes
+        direction LR
+        vmware-admin
+      end
+    end
+    subgraph 3.3
+      direction TB
+      subgraph Admin Nodes2[Admin Nodes]
+        direction LR
+        vmware-sadmin
+      end
+      subgraph PSNs2[PSNs]
+        direction LR
+        subgraph WestUS2[WestUS]
+          direction TB
+          azure-psn ~~~ azure-psn2
+        end
+        subgraph EastUS2[EastUS]
+          direction TB
+          aws-psn ~~~ aws-psn2
+        end
+        subgraph CentralUS2[CentralUS]
+          direction TB
+          oci-psn ~~~ oci-psn2
+        end
+      end
+    end
+    3.2P3-->3.3
+    vmware-sadmin --> aws-psn & aws-psn2 & azure-psn & azure-psn2 & oci-psn & oci-psn2
+```
 
 ## License
 
