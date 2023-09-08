@@ -40,25 +40,52 @@ flowchart TD;
 
 The `upgrade.yaml` file executes the Plays necessary to carry out this process.  See [Run multiple playbooks sequentially](#run-multiple-playbooks-sequentially) for more information.
 
+This is the starting point and what the `create.yaml` playbook in the `setup/` folder creates
+
+```mermaid
+flowchart LR
+    subgraph 3.2P3
+      direction TB
+      subgraph Admin Nodes
+        direction LR
+        vmware-admin ~~~ vmware-sadmin
+      end
+      subgraph PSNs
+        direction LR
+        subgraph WestUS
+          direction TB
+          azure-psn ~~~ azure-psn2
+        end
+        subgraph EastUS
+          direction TB
+          aws-psn ~~~ aws-psn2
+        end
+        subgraph CentralUS
+          direction TB
+          oci-psn ~~~ oci-psn2
+        end
+      end
+    end
+    vmware-admin & vmware-sadmin --> aws-psn & aws-psn2 & azure-psn & azure-psn2 & oci-psn & oci-psn2
+```
+
+
 ## Goals
-
 There were two goals for this project :
-
 - To upgrade the entire deployment with *no interaction* other than starting the process.
 - To be able to upgrade an 8 node deployment within one single 8 hour work shift.  Upgrading ISE is TIME CONSUMING, I know it.  Having been on the *planning/maintenance window/change window/waiting* side of many ISE upgrades, I wanted to streamline this process so that I would not have to work longer than necessary for the process to complete.
-   - The process used in these Playbooks takes a total of ***6 HOURS*** to upgrade all 8 nodes with consistency and repeatability.  I have gone through this process and refined it over and over (moving playbooks and tasks around, trying different modules/APIs) to find the shortest amount of time I could for this Upgrade.
-   - Have a larger deployment?  Great!  If your nodes are set up in a primary/secondary, or primary/secondary/tertiary, or behind a load balancer, just add the PSNs to `iteration_1` and `iteration_2`.  You'll be happy to find that the time added for these PSNs is rather short!
+    - The process used in these Playbooks takes a total of ***6 HOURS*** to upgrade all 8 nodes with consistency and repeatability.  I have gone through this process and refined it over and over (moving playbooks and tasks around, trying different modules/APIs) to find the shortest amount of time I could for this Upgrade.  
+    - Have a larger deployment?  Great!  If your nodes are set up in a primary/secondary, or primary/secondary/tertiary, or behind a load balancer, just add the PSNs to `iteration_1` and `iteration_2`.  You'll be happy to find that the time added for these PSNs is rather short!
 
 ## Quick Start
 
-Clone this repository:
+Clone this repository:  
 
 ```sh
 git clone https://github.com/ISEDemoLab/Upgrade_ISE_in_Hybrid_Cloud.git
 ```
 
 Create your Python environment and install Ansible:
-
 > ⚠ Installing Ansible using Linux packages (`sudo apt install ansible`) may result in a much older version of Ansible being installed.  
 > 💡 Installing Ansible with Python packages will get you the latest.  
 > 💡 If you have any problems installing Python or Ansible, see [Installing Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html).
@@ -77,15 +104,13 @@ pipenv shell                               # Launch the virtual environment
 ```
 
 Download the Azure python library requirements doc and install the packages listed in the document:
-
-```sh
+```
 wget -nv -q https://raw.githubusercontent.com/ansible-collections/azure/dev/requirements-azure.txt
 pipenv install -r requirements-azure.txt 
 ```
 
 The `azure.storage.cloudstorageaccount` module is not included in the Ansible collection by default, so install it with this command:
-
-```sh
+```
 pipenv install azure-storage==0.35.1 
 ```
 
@@ -93,7 +118,7 @@ pipenv install azure-storage==0.35.1
 
 If you already have Ansible installed and have been using it, you can see the version of the SDKs being used with the command `pip show <name_of_sdk>`.  If your ISE version is 3.1 Patch 1 or newer, you need at least version 2.0.10 of `ciscoisesdk`
 
-```yaml
+```
 ISE Demo Lab:~/Upgrade_ISE_in_Hybrid_Cloud$ pip show ciscoisesdk
 Name: ciscoisesdk
 Version: 2.0.10
@@ -108,46 +133,36 @@ Required-by:
 ```
 
 If your version is older than 2.0.10, you can upgrade with the following command:
-
-```sh
+```
 $ pip install ciscoisesdk --upgrade
 ```
 
 ## Requirements
-
 ### Create an AWS IAM user for API and create an Access key under that user:
-
 [How do I create an AWS access key?](https://aws.amazon.com/premiumsupport/knowledge-center/create-access-key/)
 This is a knowledge base article that contains links to the detailed steps needed.
 
 ### Create an Azure Service Principal using the Azure CLI:
-
 Use this page to create the Azure service principal:
 [Quickstart: Create an Azure service principal for Ansible](https://learn.microsoft.com/en-us/azure/developer/ansible/create-ansible-service-principal?tabs=azure-cli)
-
 > ⚠ There is a typo in the **Assign a role to the Azure service principal** section.  
-> 💡 The text reads **"Replace `<appID>` with the value provided from the output of `az ad sp create-for-rba` command."**
+> 💡 The text reads **"Replace `<appID>` with the value provided from the output of `az ad sp create-for-rba` command."**<br>
 > 💡 It should read **"Replace `<appID>` with the value provided from the output of `az ad sp create-for-rbac` command."** which is the command from the first step.
 
 ### Create an API Signing Key and default config file for OCI:
-
 [SDK and CLI Configuration File](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdkconfig.htm#SDK_and_CLI_Configuration_File)
 [Required Keys and OCIDs](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm)
 
 ### Configure ESXi API for Ansible
-
 [VMware Prerequisites](https://docs.ansible.com/ansible/latest/collections/community/vmware/docsite/vmware_scenarios/vmware_requirements.html)
 
 ### Install the VMware vSphere Automation SDK for Python for `community.vmware` collection modules
-
 [VMware vSphere Automation SDK for Python](https://medium.com/@hegdeanusha25/getting-started-with-the-vmware-vsphere-automation-sdk-for-python-505b9c4b03c9)
 If your virtual environment is already setup, just run the following command:
-
 ```sh
 pip install — upgrade git+https://github.com/vmware/vsphere-automation-sdk-python.git
 ```
-
-This is only needed for the dynamic inventory in this lab.
+This is only needed for the dynamic inventory in this lab.  
 
 ### The following Ansible collections are needed:
 
@@ -160,11 +175,10 @@ This is only needed for the dynamic inventory in this lab.
 - cisco.ios
 - ansible.netcommon
 
-If you already have Ansible installed and have been using it, you can see the version of the collections with the command `ansible-galaxy collection list`.   If your ISE version is 3.1 Patch 1 or newer, you need at least version 2.5.15 of the `cisco.ise` collection.
+If you already have Ansible installed and have been using it, you can see the version of the collections with the command `ansible-galaxy collection list`.   If your ISE version is 3.1 Patch 1 or newer, you need at least version 2.5.15 of the `cisco.ise` collection. 
 
 The collections listed in this top section are those installed to be used:
-
-```ini
+```
 ISE Demo Lab:~/Upgrade_ISE_in_Hybrid_Cloud$ ansible-galaxy collection list
 
 # /home/charlie/.ansible/collections/ansible_collections
@@ -189,14 +203,12 @@ vmware.vmware_rest            2.3.1
 ```
 
 You can upgrade the collection with the following command:
-
-```sh
+```
 ansible-galaxy collection install cisco.ise -U
 ```
 
 ## Environment Variables
-
-Export your Azure and ISE credentials into your terminal environment:
+Export your Azure and ISE credentials into your terminal environment:  
 
 ```sh
 export AZURE_CLIENT_ID=<service_principal_client_id>
@@ -239,8 +251,7 @@ project_name: Upgrade_ISE_in_Hybrid_Cloud
 ```
 
 ## Run multiple playbooks sequentially
-
-```yaml
+```
 ansible-playbook upgrade.yaml
 ```
 
@@ -248,8 +259,7 @@ Contents of upgrade.yaml. Each playbook will finish before moving on to the next
 
 I use this method to consistently upgrade my 8-node 3.2 Patch 3 deployment to 3.3 in **6 hours 40 minutes**.
 
-```yaml
-
+```upgrade.yaml
 ---
 - name: Upgrade Secondary Admin Node
   ansible.builtin.import_playbook: admin_1/secondary_admin.yaml
@@ -262,7 +272,6 @@ I use this method to consistently upgrade my 8-node 3.2 Patch 3 deployment to 3.
 
 - name: Upgrade Primary Admin Node
   ansible.builtin.import_playbook: admin_2/primary_admin.yaml
-
 ```
 
 ## License
