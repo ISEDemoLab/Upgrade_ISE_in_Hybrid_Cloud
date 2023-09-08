@@ -238,7 +238,7 @@ Edit the project and deployment settings in `vars/main.yaml` to match your envir
 project_name: Upgrade_ISE_in_Hybrid_Cloud
 ```
 
-## Run multiple playbooks sequentially {#1}
+## Run multiple playbooks sequentially
 
 ```yaml
 ansible-playbook upgrade.yaml
