@@ -38,7 +38,7 @@ flowchart TD;
     E --> F["Upgrade Complete!"]
 ```
 
-The `upgrade.yaml` file executes the Plays necessary to carry out this process.  See [Run multiple playbooks sequentially](#1) for more information.
+The `upgrade.yaml` file executes the Plays necessary to carry out this process.  See [Run multiple playbooks sequentially](#run-multiple-playbooks-sequentially) for more information.
 
 ## Goals
 
