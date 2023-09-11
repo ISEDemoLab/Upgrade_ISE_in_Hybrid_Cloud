@@ -1,0 +1,20 @@
+---
+- name: Remove Nodes from Traefik Load Balancer
+  hosts: traefik
+  become: yes
+  gather_facts: false
+  vars:
+    - ansible_ssh_user: ubuntu
+  vars_files:
+    - ../vars/linux.yaml
+  tasks:
+
+  # ------------------------------------------------------------------------
+  # Restore the original RADIUS configuration in the Load Balancer
+  # ------------------------------------------------------------------------
+
+  - name: Copy Configuration to LB disabling `iteration_1` nodes
+    copy:
+      src: traefik/radius.yaml
+      dest: /home/ubuntu/traefik/config/radius.yaml
+      backup: no

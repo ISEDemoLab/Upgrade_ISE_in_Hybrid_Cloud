@@ -1,0 +1,20 @@
+---
+- name: Remove Nodes from Traefik Load Balancer
+  hosts: traefik
+  become: yes
+  gather_facts: false
+  vars:
+    - ansible_ssh_user: ubuntu
+  vars_files:
+    - ../vars/linux.yaml
+  tasks:
+
+  # ------------------------------------------------------------------------
+  # Disable the `iteration_2` PSNs in the Load Balancer
+  # ------------------------------------------------------------------------
+
+  - name: Copy Configuration to LB disabling `iteration_2` nodes
+    copy:
+      src: radius_2.yaml
+      dest: /home/ubuntu/traefik/config/radius.yaml
+      backup: no

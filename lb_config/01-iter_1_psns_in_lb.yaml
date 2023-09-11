@@ -1,0 +1,32 @@
+---
+- name: Remove Nodes from Traefik Load Balancer
+  hosts: traefik
+  become: yes
+  gather_facts: false
+  vars:
+    - ansible_ssh_user: ubuntu
+  vars_files:
+    - ../vars/linux.yaml
+  tasks:
+
+  # ------------------------------------------------------------------------
+  # Retrieve the currently running RADIUS configuration
+  # ------------------------------------------------------------------------
+
+  - name: Download file from Remote Machine to Local ansible-node directory
+    fetch:
+      src: /home/ubuntu/traefik/config/radius.yaml
+      dest: traefik/
+      remote_src: yes
+      flat: yes
+      force: yes
+
+  # ------------------------------------------------------------------------
+  # Disable the `iteration_1` PSNs in the Load Balancer
+  # ------------------------------------------------------------------------
+
+  - name: Copy Configuration to LB disabling `iteration_1` nodes
+    copy:
+      src: radius_1.yaml
+      dest: /home/ubuntu/traefik/config/radius.yaml
+      backup: no

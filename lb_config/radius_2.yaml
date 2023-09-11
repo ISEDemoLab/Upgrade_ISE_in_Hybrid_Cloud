@@ -1,0 +1,84 @@
+# Dynamic RADIUS configuration
+#############################################################################################
+# Each protocol (http, tcp, udp) needs its own dynamic configuration file.
+# The `routers` below are simply how to define the entrypoint and assign it to a
+# server group under `services`.  The `router` name is arbitrary in this file, but
+# should be a meaningful name.
+#
+# udp:                      # Protocol
+#   routers:                # To begin the `routers` context
+#     auth1router:          # Name fo the router
+#       entryPoints:        # EntryPoints are defined in the Static Configuration File
+#       - auth1             # The entryPint from the Static Configuration File to be assigned
+#       service: radius-1   # The server group (below) to which the entryPoint is assigned
+#############################################################################################
+udp:
+  routers:
+    auth1router:
+      entryPoints:
+      - auth1
+      service: radius-1
+    auth2router:
+      entryPoints:
+      - auth2
+      service: radius-2
+    auth3router:
+      entryPoints:
+      - auth3
+      service: radius-3
+    acct1router:
+      entryPoints:
+      - auth1
+      service: acct-1
+    acct2router:
+      entryPoints:
+      - auth2
+      service: acct-2
+    acct3router:
+      entryPoints:
+      - auth3
+      service: acct-3
+
+#############################################################################################
+# The `services` section assigns the backend servers to the entryPoint.  The `service` name
+# (radius-1) is arbitrary, but should be meaningful and is referenced above in the `routers`
+# section.
+#
+# healthChecks remove unhealthy servers from the load balancing rotation. Traefik will
+# consider your servers healthy as long as they return status codes between 2XX and 3XX to
+# the health check requests.  Optional settings can be found at:
+# https://doc.traefik.io/traefik/routing/services/
+#############################################################################################
+  services:
+    radius-1:
+      loadBalancer:
+        servers:
+          - address: "192.168.104.4:1812"
+          # - address: "10.1.100.25:1812"
+    radius-2:
+      loadBalancer:
+        servers:
+          - address: "192.168.100.4:1812"
+          # - address: "192.168.102.4:1812"
+    radius-3:
+      loadBalancer:
+        servers:
+          - address: "192.168.100.5:1812"
+          # - address: "192.168.102.5:1812"
+          - address: "192.168.104.5:1812"
+    acct-1:
+      loadBalancer:
+        servers:
+          - address: "192.168.104.4:1813"
+          # - address: "10.1.100.25:1813"
+    acct-2:
+      loadBalancer:
+        servers:
+          - address: "192.168.100.4:1813"
+          # - address: "192.168.102.4:1813"
+    acct-3:
+      loadBalancer:
+        servers:
+          - address: "192.168.100.5:1813"
+          # - address: "192.168.102.5:1813"
+          - address: "192.168.104.5:1813"
