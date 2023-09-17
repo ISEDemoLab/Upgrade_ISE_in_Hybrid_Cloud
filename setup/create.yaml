@@ -1,4 +1,12 @@
 ---
+- name: Deploy VMware nodes 
+  ansible.builtin.import_playbook: 01-vmware_iso.yaml
+  tags: [ise32,vmware,install]
+
+- name: Deploy AWS PSNs (ISE 3.2)
+  ansible.builtin.import_playbook: 04-setup_aws.yaml
+  tags: [ise32,aws,install]
+
 - name: Deploy Azure PSNs (ISE 3.2)
   ansible.builtin.import_playbook: 02-setup_azure.yaml
   tags: [ise32,azure,install]
@@ -6,14 +14,6 @@
 - name: Deploy OCI PSNs (ISE 3.2)
   ansible.builtin.import_playbook: 03-setup_oci.yaml
   tags: [ise32,oci,install]
-
-- name: Deploy AWS PSNs (ISE 3.2)
-  ansible.builtin.import_playbook: 04-setup_aws.yaml
-  tags: [ise32,aws,install]
-
-- name: Deploy VMware nodes
-  ansible.builtin.import_playbook: 01-setup_vmware.yaml
-  tags: [ise32,vmware,install]
 
 - name: Wait for Application Server to be available
   ansible.builtin.import_playbook: 05-wait_for_padmin_login.yaml  

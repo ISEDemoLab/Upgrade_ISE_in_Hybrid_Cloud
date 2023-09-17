@@ -54,6 +54,7 @@
           - SecondaryAdmin
           - PrimaryMonitoring
         services: []
+      ignore_errors: yes
       register: node_registration
 
     - name: Wait for new Secondary Admin to sync to deployment database | {{ upg_ppan }}

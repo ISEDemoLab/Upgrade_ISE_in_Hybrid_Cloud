@@ -34,38 +34,6 @@
         hostname: vmware-admin
       ignore_errors: yes
 
-  # -------------------------------------------------------------------------
-  # Secondary ⮕ Primary: 🕑  ~60 seconds
-  # -------------------------------------------------------------------------
-  #
-  # Ⰹ ISE REST API: POST /api/v1/deployment/promote
-  # Promotes the node on which the API is invoked to the primary ISE PAN.
-  # Approximate execution time ~60 seconds!
-  # This will trigger an ISE Application Server Restart!
-  #
-  # This will result in the following error as the services restart:
-  #
-  # fatal: [localhost]: FAILED! => changed=false
-  #   elapsed: 30
-  #   msg: 'Status code was -1 and not [200]: Connection failure: The read operation timed out'
-  #   redirected: false
-  #   status: -1
-  #   url: https://vmware-sadmin.securitydemo.net/api/v1/deployment/promote
-  # ...ignoring
-  #
-  # This is why we use the `ignore_errors: yes` flag.
-  # -------------------------------------------------------------------------
-
-    # - name: Promote vmware-admin from Secondary to Primary Admin | vmware-admin | 🕑 ~60s
-    #   delegate_to: localhost
-    #   ansible.builtin.uri:
-    #     url: "https://vmware-admin.securitydemo.net/api/v1/deployment/promote"
-    #     method: POST
-    #     url_username: "{{ ise_username }}"
-    #     url_password: "{{ ise_password }}"
-    #     validate_certs: "{{ ise_verify }}"
-    #   ignore_errors: yes # Errors do not stop execution
-
     - name: 🛑 Pause for 3 Minutes to allow Role Change from Secondary Admin to Primary 🛑
       ansible.builtin.pause:
         seconds: 180

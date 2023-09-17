@@ -176,9 +176,12 @@ esxi_username: "{{ lookup('env','ESXI_USERNAME') }}"
 esxi_password: "{{ lookup('env','ESXI_PASSWORD') }}"
 datacenter: "ISE Demo Lab"
 datastore: "local-ds-p04"
+iso_datastore: "zISOs (1)"
 ProvisioningNetworkLabel: "VM-3k-access-v100-promiscuous"
 ise32_ovf: /mnt/c/wsl/ISE-3.2.0.542a-virtual-SNS3615-SNS3655-300.ova
 ise33_ovf: /mnt/c/wsl/Cisco-vISE-300-3.3.0.430.ova
+ise32_iso: ise-3.2.0.542a.SPA.x86_64.iso
+ise33_iso: ise-3.3.0.430.SPA.x86_64.iso
 #
 #########################################################################################
 #

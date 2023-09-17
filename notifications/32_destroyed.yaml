@@ -12,3 +12,13 @@
     - name: Send Email Notification
       ansible.builtin.shell:
         cmd: "ssmtp charlie@isedemolab.com < 32_deployment_destroyed.txt"
+
+    - name: Send Push Notification
+      ansible.builtin.shell:
+        cmd: |
+          curl \
+            -H "Title: Your 3.2 deployment has been DESTROYED!" \
+            -H "Priority: urgent" \
+            -H "Tags: biohazard,skull" \
+            -d "Hasta la vista, baby" \
+            ntfy.sh/ise-ansible

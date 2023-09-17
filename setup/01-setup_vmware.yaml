@@ -37,7 +37,7 @@
         networks: "{u'VM Network':u'{{ ProvisioningNetworkLabel }}'}"
         power_on: no
         ovf: "{{ ise32_ovf }}"
-        wait_for_ip_address: true
+        wait_for_ip_address: false
         validate_certs: no
         properties:
           DeploymentOption.value: 'small' # For this OVA, the values are Eval, PSN_Lite, small, medium
@@ -59,8 +59,8 @@
         cdrom:
         - type: "iso"
           iso_path: "[{{ datastore }}] /ISO/ZTP/vmware-admin.iso"
-          controller_number: 1
-          unit_number: 1
+          controller_number: 0
+          unit_number: 0
 
     #--------------------------------------------------------------------------
     # Power on the VM
@@ -91,7 +91,7 @@
         networks: "{u'VM Network':u'{{ ProvisioningNetworkLabel }}'}"
         power_on: no
         ovf: "{{ ise32_ovf }}"
-        wait_for_ip_address: true
+        wait_for_ip_address: false
         validate_certs: no
         properties:
           DeploymentOption.value: 'small' # For this OVA, the values are Eval, PSN_Lite, small, medium
@@ -105,8 +105,8 @@
         cdrom:
         - type: "iso"
           iso_path: "[{{ datastore }}] /ISO/ZTP/vmware-sadmin.iso"
-          controller_number: 1
-          unit_number: 1
+          controller_number: 0
+          unit_number: 0
 
     - name: Power on virtual machine
       community.vmware.vmware_guest_powerstate:

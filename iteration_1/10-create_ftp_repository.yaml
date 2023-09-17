@@ -4,7 +4,6 @@
   hosts: localhost
   vars_files:
     - ../vars/main.yaml
-    - ../vars/banners.yaml
 
   tasks:
    
@@ -22,21 +21,6 @@
   # - SFTP
   # - TFTP
   # ------------------------------------------------------------------------
-
-    # - name: Create DISK Repository in ISE
-    #   cisco.ise.repository:
-    #     ise_hostname: "{{ upg_ppan }}"
-    #     ise_username: "{{ ise_username }}"
-    #     ise_password: "{{ ise_password }}"
-    #     ise_verify: "{{ ise_verify }}"
-    #     state: present
-    #     enablePki: false
-    #     name: ssh
-    #     # password: string # Not used for Disk repository
-    #     path: /
-    #     protocol: DISK
-    #     # serverName: string # Not used for Disk repository
-    #     # userName: string # Not used for Disk repository
 
     - name: Create FTP Repository on azure-psn
       cisco.ise.repository:

@@ -12,6 +12,16 @@
       ansible.builtin.shell:
         cmd: "ssmtp charlie@isedemolab.com < ../notifications/33_deployment_done.txt"
 
+    - name: Send Push Notification
+      ansible.builtin.shell:
+        cmd: |
+          curl \
+            -H "Title: Your ISE deployment has successfully been upgraded to 3.3" \
+            -H "Priority: urgent" \
+            -H "Tags: robot,tada" \
+            -d "Thank you for the opportunity to serve" \
+            ntfy.sh/ise-ansible 
+
     - name: Your deployment has been upgraded to 3.3! 🤍
       ansible.builtin.debug:
         msg: |

@@ -52,21 +52,6 @@
     timeout: 600 # Default: 300. Stop checking after <seconds>
     ignore_errors: yes
 
-  # - name: Remove ISE Node from the Deployment | vmware-sadmin 🪓
-  #   delegate_to: localhost
-  #   ansible.builtin.uri:
-  #     url: "https://{{ upg_ppan }}:443/api/v1/deployment/node/vmware-sadmin"
-  #     method: DELETE
-  #     url_username: "{{ ise_username }}"
-  #     url_password: "{{ ise_password }}"
-  #     force_basic_auth: yes
-  #     status_code: 200,500
-  #     validate_certs: "{{ ise_verify }}"
-  #     return_content: true
-  #   register: response
-  #   failed_when: (response.status != 200) and (response.status != 500)
-  #   ignore_errors: yes # Errors do not stop execution
-
   - name: Verify All Nodes Deregistered from PPAN | {{ ise_ppan }}
     # when: inventory_hostname == ise_ppan_name
     cisco.ise.node_info:

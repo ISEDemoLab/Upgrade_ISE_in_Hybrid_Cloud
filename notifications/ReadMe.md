@@ -183,20 +183,23 @@ The reason that Swaks is so easy to configure is that you pass the connection in
 To add files for the `--body` and `--attach` options, prepend the file path with `@`.
 
 ```sh
-swaks -tlsc \
-    --to charlie@isedemolab.com \
-    --from ${EMAIL_FROM} \
-    --server ${EMAIL_SERVER} \
-    --port ${EMAIL_PORT} \
-    --auth LOGIN \
-    --auth-user ${EMAIL_USER} \
-    --auth-password ${EMAIL_PASSWORD} \
-    --auth-hide-password \
-    --header "Subject: Your ISE 3.2 Upgrade Report Results" \
-    --header "Content-Type: text/plain; charset=UTF-8" \
-    --body @../notifications/precheck_report.txt \
-    --attach @../notifications/precheck_report.json \
-    --attach-name precheck_report.json
+    - name: Email the PreCheck Report File
+      ansible.builtin.shell:
+        cmd: >
+          swaks -tlsc 
+          --to charlie@isedemolab.com 
+          --from ${EMAIL_FROM} 
+          --server ${EMAIL_SERVER} 
+          --port ${EMAIL_PORT} 
+          --auth LOGIN 
+          --auth-user ${EMAIL_USER} 
+          --auth-password ${EMAIL_PASSWORD} 
+          --auth-hide-password 
+          --header "Subject: Your ISE 3.2 Upgrade Report Results" 
+          --header "Content-Type: text/plain; charset=UTF-8" 
+          --body @../notifications/precheck_report.txt 
+          --attach @../notifications/precheck_report.json 
+          --attach-name precheck_report.json
 ```
 
 ## License

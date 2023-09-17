@@ -73,18 +73,18 @@
     ansible.builtin.pause:
       seconds: 180
   
-  # - name: Wait for ⬇ Reboot⬆
-  #   delegate_to: localhost
-  #   vars:
-  #     wait_timeout: "{{ 30 * 60 }}" # 1800s == 30 minutes per port
-  #   with_items:
-  #     - 443 # SSH/REST/API Gateway
-  #     - 80 # Admin UI redirect to 443
-  #     - 22 # SSH
-  #   ansible.builtin.wait_for:
-  #     host: "ise-azure2.securitydemo.net"
-  #     port: "{{ item }}"
-  #     state: stopped # Port is CLOSED
-  #     sleep: 3 # Default: 1. Seconds to sleep between checks. 💡 10 seconds is not fast enough to catch SSH???
-  #     timeout: "{{ wait_timeout }}" # Default: 300. Stop checking after <seconds>
-  #   ignore_errors: yes # Errors do not stop execution
+  - name: Wait for ⬇ Reboot⬆
+    delegate_to: localhost
+    vars:
+      wait_timeout: "{{ 30 * 60 }}" # 1800s == 30 minutes per port
+    with_items:
+      - 443 # SSH/REST/API Gateway
+      - 80 # Admin UI redirect to 443
+      - 22 # SSH
+    ansible.builtin.wait_for:
+      host: "ise-azure2.securitydemo.net"
+      port: "{{ item }}"
+      state: stopped # Port is CLOSED
+      sleep: 3 # Default: 1. Seconds to sleep between checks. 💡 10 seconds is not fast enough to catch SSH???
+      timeout: "{{ wait_timeout }}" # Default: 300. Stop checking after <seconds>
+    ignore_errors: yes # Errors do not stop execution

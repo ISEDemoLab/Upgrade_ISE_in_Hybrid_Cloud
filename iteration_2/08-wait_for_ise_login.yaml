@@ -4,8 +4,6 @@
   hosts: localhost
   vars_files:
     - ../vars/main.yaml
-    - ../vars/banners.yaml
-
   tasks:
 
     - name: Wait for ISE App Server to Come Up ∆ ∆ ∆

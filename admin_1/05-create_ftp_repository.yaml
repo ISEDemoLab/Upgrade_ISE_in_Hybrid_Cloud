@@ -10,7 +10,7 @@
    
     - name: Create FTP Repository on vmware-sadmin
       cisco.ise.repository:
-        ise_hostname: "vmware-sadmin.securitydemo.net"
+        ise_hostname: "{{ upg_span }}"
         ise_username: "{{ ise_username }}"
         ise_password: "{{ ise_init_password }}"
         ise_verify: "{{ ise_verify }}"

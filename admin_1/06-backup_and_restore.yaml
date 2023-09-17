@@ -3,8 +3,6 @@
   gather_facts: false
   hosts: localhost
   connection: local
-  # vars:
-  #   ise_backup_name_prefix: "UPG_{{ DT_ISO8601 | strftime }}"
   vars_files:
     - ../vars/main.yaml
     - ../vars/banners.yaml
@@ -16,7 +14,7 @@
 #------------------------------------------------------------------------------
 # Requires an ISE Repository.
 # Defaults:
-# - ise_repository_name = the first ISE repository name
+# - ise_repository_name = the ISE repository name created in the last Play
 # - ise_backup_name_prefix = "NOW"
 # - ise_backup_encryption_key = ISEisC00L
 # Sets the following variables:
@@ -212,7 +210,6 @@
           - ise_backup_status.ise_response is defined
           - ise_backup_status.ise_response.message is defined
         ansible.builtin.set_fact:
-          # message: 'backup ISEEE-CFG10-230723-1628.tar.gpg to repository ftp.trust0.net: success'
           ise_backup_filename: "{{ ise_backup_status.ise_response.message.split(' ')[1] }}"
           ise_restore_filename: "{{ ise_backup_status.ise_response.message.split(' ')[1] }}"
         ignore_errors: true
@@ -259,12 +256,13 @@
         - ise_restore_filename is defined
         - ise_restore_filename != ''
     register: role_assertions
-    # ignore_errors: true
 
+  #------------------------------------------------------------------------------
   # Triggers a configuration DB restore job on the ISE node. 
   # The API returns the task ID.
   # Use the cisco.ise.tasks_info module to get the status of the restore job.
   # Unclear from the restore API what exactly is done before the status is returned.
+  #------------------------------------------------------------------------------
   - name: Restore ISE Configuration | {{ ise_restore_filename }}
     delegate_to: localhost
     ansible.builtin.uri:
@@ -320,21 +318,56 @@
     ansible.builtin.set_fact:
       ise_restore_task_id: "{{ ise_restore_status.json.response.id }}"
   
-  - name: ISE Restore Task Status | {{ ise_restore_task_id }}
-    when: 
-      - ise_restore_task_id is defined
-    cisco.ise.tasks_info:
-      ise_hostname: "{{ upg_span }}"
-      ise_username: "{{ ise_username }}"
-      ise_password: "{{ ise_init_password }}"
-      validate_certs: "{{ ise_verify }}"
-      taskId: "{{ ise_restore_status.json.response.id }}"
-    register: ise_restore_progress
-    # until: ise_restore_progress.ise_response.failCount != None or ise_restore_progress.ise_response.successCount != None
-    # delay: 10 # Seconds to delay between retries in `until` loop; Default: 0
-    # retries: 60 # Stop after N retries in `until` loop
-    ignore_errors: true
+  # - name: ISE Restore Task Status | {{ ise_restore_task_id }}
+  #   when: 
+  #     - ise_restore_task_id is defined
+  #   cisco.ise.tasks_info:
+  #     ise_hostname: "{{ upg_span }}"
+  #     ise_username: "{{ ise_username }}"
+  #     ise_password: "{{ ise_init_password }}"
+  #     validate_certs: "{{ ise_verify }}"
+  #     taskId: "{{ ise_restore_status.json.response.id }}"
+  #   register: ise_restore_progress
+  #   # until: ise_restore_progress.ise_response.failCount != None or ise_restore_progress.ise_response.successCount != None
+  #   # delay: 10 # Seconds to delay between retries in `until` loop; Default: 0
+  #   # retries: 60 # Stop after N retries in `until` loop
+  #   ignore_errors: true
   
+  - name: ISE Restore Task Status | {{ ise_restore_task_id }}
+    delegate_to: localhost
+    ansible.builtin.uri:
+      url: "https://vmware-sadmin.securitydemo.net/api/v1/task/{{ ise_restore_task_id }}"
+      method: GET
+      url_username: "{{ ise_username }}"
+      url_password: "{{ ise_init_password }}"
+      validate_certs: "{{ ise_verify }}"
+      force_basic_auth: yes
+      force: true # do not get a cached copy
+      follow_redirects: safe
+      # body_format: json
+      # body: |
+      #   {
+      #     "detailStatus": [
+      #       {}
+      #     ],
+      #     "executionStatus": "string",
+      #     "failCount": 0,
+      #     "id": "{{ ise_restore_task_id }}",
+      #     "moduleType": "string",
+      #     "resourcesCount": 0,
+      #     "startTime": "string",
+      #     "successCount": 0
+      #   }
+      status_code: [
+          200, # Success
+          401, # Unauthorized
+        ]
+      timeout: 600 # in seconds (10 minutes)
+      return_content: true
+    register: ise_restore_progress
+    failed_when: ise_restore_status.status != 202
+    ignore_errors: true # Errors do not stop execution
+
     # Example `ise_restore_progress` Results
     # ```
     # ise_response:

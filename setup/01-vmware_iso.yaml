@@ -1,5 +1,5 @@
 ---
-- name: Create the Secondary Admin Node in VMware
+- name: Create the Admin Nodes in VMware
   gather_facts: false
   hosts: localhost
   connection: local
@@ -17,32 +17,9 @@
     #--------------------------------------------------------------------------
     # The example shown here is to install to an ESXi host, you can
     # install to vCenter Server as well.
-    # Specify at least:
-    # - `datastore` to which you will install the VM
-    # - `name` VM name
-    # - `networks` for the NIC(s)
-    # - `ovf` full path to the ovf or ova file
-    # - `DeploymentOption.value` selects the size of the VM.
-    #    For this ova, the options are:
-    #   - Eval
-    #   - PSN_Lite
-    #   - small
-    #   - medium
+    # The entries shown below are the minimum required entries.
     #--------------------------------------------------------------------------
-
-    # - name: Deploy OVA to ESXi Server to be the Primary Admin Node (3.3) ⏳ | 🕑 ~17m
-    #   community.vmware.vmware_deploy_ovf:
-    #     datastore: '{{ datastore }}'
-    #     name: vmware-sadmin
-    #     networks: "{u'VM Network':u'{{ ProvisioningNetworkLabel }}'}"
-    #     power_on: no
-    #     ovf: "{{ ise33_ovf }}"
-    #     wait_for_ip_address: true
-    #     validate_certs: no
-    #     properties:
-    #       DeploymentOption.value: 'medium' # For this OVA, the values are Eval, PSN_Lite, small, medium
-    #   delegate_to: localhost
-
+    # Zero Touch Provisioning (ZTP)
     #--------------------------------------------------------------------------
     # Attach the ztp.iso to the VM using the full datastore path
     # the `datastore` name must be enclosed in [brackets] followed by
@@ -51,18 +28,58 @@
     # `unit_number`
     #--------------------------------------------------------------------------
 
-    # - name: Add ZTP info to VM
-    #   community.vmware.vmware_guest:
-    #     validate_certs: no
-    #     name: vmware-sadmin
-    #     state: present
-    #     cdrom:
-    #     - type: "iso"
-    #       iso_path: "[{{ datastore }}] /ISO/ZTP/vmware-sadmin.iso"
-    #       controller_number: 1
-    #       unit_number: 1
+    - name: Deploy {{ upg_ppan }} on ESXi
+      community.vmware.vmware_guest:
+        name: vmware-admin
+        state: poweredoff
+        datastore: "{{ datastore }}"
+        guest_id: rhel8_64Guest
+        folder: /
+        disk:
+        - size_gb: 300
+          type: thin
+          controller_number: 0
+          unit_number: 0
+          controller_type: paravirtual
+          datastore: "[{{ datastore }}]"
+          disk_mode: persistent
+        networks: 
+        - name: '{{ ProvisioningNetworkLabel }}'
+        cdrom:
+        - type: "iso"
+          iso_path: "[{{ iso_datastore }}] /{{ ise32_iso }}"
+          controller_number: 0
+          unit_number: 0
+        - type: "iso"
+          iso_path: "[{{ datastore }}] /ISO/ZTP/vmware-admin.iso"
+          controller_number: 1
+          unit_number: 0
+        hardware:
+          boot_firmware: "bios"
+          memory_mb: 32768
+          num_cpus: 8
+          num_cpu_cores_per_socket: 4
+          cpu_reservation: 16000
+          mem_reservation: 32768
+          memory_reservation_lock: true
+          scsi: paravirtual
+          version: latest
+        validate_certs: no
+      delegate_to: localhost
+      register: deploy_vm
+      ignore_errors: yes
 
-    - name: Deploy {{ upg_span }} version 3.3 on ESXi
+    #--------------------------------------------------------------------------
+    # Power on the VM
+    #--------------------------------------------------------------------------
+
+    - name: Power on virtual machine
+      community.vmware.vmware_guest_powerstate:
+        validate_certs: false
+        name: vmware-admin
+        state: powered-on
+
+    - name: Deploy {{ upg_span }} on ESXi
       community.vmware.vmware_guest:
         name: vmware-sadmin
         state: poweredoff
@@ -81,7 +98,7 @@
         - name: '{{ ProvisioningNetworkLabel }}'
         cdrom:
         - type: "iso"
-          iso_path: "[{{ iso_datastore }}] /{{ ise33_iso }}"
+          iso_path: "[{{ iso_datastore }}] /{{ ise32_iso }}"
           controller_number: 0
           unit_number: 0
         - type: "iso"
@@ -91,9 +108,9 @@
         hardware:
           boot_firmware: "bios"
           memory_mb: 32768
-          num_cpus: 16
+          num_cpus: 8
           num_cpu_cores_per_socket: 4
-          cpu_reservation: 32000
+          cpu_reservation: 16000
           mem_reservation: 32768
           memory_reservation_lock: true
           scsi: paravirtual
@@ -103,17 +120,13 @@
       register: deploy_vm
       ignore_errors: yes
 
-    #--------------------------------------------------------------------------
-    # Power on the VM
-    #--------------------------------------------------------------------------
-
     - name: Power on virtual machine
       community.vmware.vmware_guest_powerstate:
         validate_certs: false
         name: vmware-sadmin
         state: powered-on
 
-    - name: Your Primary Admin Node has been deployed!
+    - name: Your ISE nodes have been deployed!
       ansible.builtin.debug:
         msg: |
           {{bar}}(@@,     g@@@@g,g@@@@g,g@@@@g  @k     g@      @F g@@%%@g,   @L,g@@  ,g@NNBw  
@@ -123,33 +136,9 @@
           {{bar}}    $@@@P    @@@    @@@    @@@    $@@     @@F   %@,   ,g$@  @F     "$g,  ,g@    
           {{bar}}     ""`      "`    `"`    '"`     "       `      """"  '`  "         """"  
           {{bar}}
-          {{bar}}                Your NEW ISE 3.3 Primary Admin Node has been deployed!
-          
+          {{bar}}           Your ISE nodes have been deployed on VMware ESXi!
+          {{bar}}
+          {{bar}} - {{ upg_ppan }} 
+          {{bar}} - {{ upg_span }}
     - name: Refresh inventory to ensure new instances exist in inventory ⟳
       ansible.builtin.meta: refresh_inventory
-
-    - name: Wait for ISE App Server on Secondary Admin Node to Come Up ∆ ∆ ∆
-      ansible.builtin.debug:
-        msg: |
-           
-           ________
-            (    )
-             \../
-              )(     Wait for ISE AppServer to Come Up ∆ ∆ ∆
-             /  \    on vmware-sadmin
-            (::::)
-           --------
-
-    - name: ISE Login ⮕ | vmware-sadmin | 🕑 ~50m
-      delegate_to: localhost
-      ansible.builtin.uri:
-        url: https://vmware-sadmin.securitydemo.net/admin/login.jsp
-        method: GET
-        follow_redirects: safe
-        timeout: "3"
-        validate_certs: "no"
-        return_content: no
-      register: result
-      until: result.status == 200
-      retries: "1000"
-      delay: "10" # wait between checks

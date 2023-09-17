@@ -18,7 +18,7 @@
           curl \
             -H "Title: Your 3.2 deployment has successfully been provisioned" \
             -H "Priority: urgent" \
-            -H "Tags: biohazard,skull" \
+            -H "Tags: bell,loudspeaker" \
             -d "Before anything else, please log in to the WebGUI" \
             ntfy.sh/ise-ansible 
 
