@@ -1,0 +1,91 @@
+---
+- name: Promote to Primary
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../../vars/main.yaml
+    - ../../vars/banners.yaml
+
+  tasks:
+
+  # -------------------------------------------------------------------------
+  # Secondary ⮕ Primary: 🕑  ~60 seconds
+  # -------------------------------------------------------------------------
+  # Using the module below requires version 2.5.15 of the cisco.ise collection.
+  # To upgrade to the latest collection, use this command.
+  #
+  # `ansible-galaxy collection install cisco.ise -U`
+  #
+  # If you are using a collection older than 2.5.15, you will receive this error:
+  #
+  # An exception occurred during task execution. To see the full traceback, use -vvv. The error was: NoneType: None
+  # fatal: [localhost]: FAILED! => changed=false
+  #   msg:
+  #   - 'hostname. Supported parameters include: ise_debug, ise_hostname, ise_password, ise_username, ise_uses_api_gateway, ise_uses_csrf_token, ise_verify, ise_version, ise_wait_on_rate_limit.' 
+  #
+  # -------------------------------------------------------------------------
+   
+    - name: Promote vmware-admin from Secondary to Primary Admin | vmware-admin | 🕑 ~60s
+      cisco.ise.node_secondary_to_primary:
+        ise_hostname: "{{upg_ppan}}" # Must run this on the Secondary Admin Node
+        ise_username: "{{ise_username}}"
+        ise_password: "{{ise_password}}"
+        ise_verify: "{{ise_verify}}"
+        hostname: vmware-admin
+      ignore_errors: yes
+
+    - name: 🛑 Pause for 3 Minutes to allow Role Change from Secondary Admin to Primary 🛑
+      ansible.builtin.pause:
+        seconds: 180
+
+    - name: Wait for ISE App Server on Primary Admin Node to Come Up ∆ ∆ ∆
+      ansible.builtin.debug:
+        msg: |
+           
+           ________
+            (    )
+             \../
+              )(     Wait ~20 minutes for ISE AppServer to Come Up ∆ ∆ ∆
+             /  \    on vmware-sadmin
+            (::::)
+           --------
+
+    - name: ISE Login ⮕ | vmware-admin ⏳
+      delegate_to: localhost
+      ansible.builtin.uri:
+        url: https://vmware-sadmin.securitydemo.net/admin/login.jsp
+        method: GET
+        follow_redirects: safe
+        timeout: "3"
+        validate_certs: "no"
+        return_content: no
+      register: result
+      until: result.status == 200
+      retries: "1000"
+      delay: "10" # wait between checks
+
+    - name: Wait for ISE App Server on Secondary Admin Node to Come Up ∆ ∆ ∆
+      ansible.builtin.debug:
+        msg: |
+           
+           ________
+            (    )
+             \../
+              )(     Wait for ISE AppServer to Come Up ∆ ∆ ∆
+             /  \    on vmware-admin
+            (::::)
+           --------
+
+    - name: ISE Login ⮕ | vmware-sadmin ⏳
+      delegate_to: localhost
+      ansible.builtin.uri:
+        url: https://vmware-admin.securitydemo.net/admin/login.jsp
+        method: GET
+        follow_redirects: safe
+        timeout: "3"
+        validate_certs: "no"
+        return_content: no
+      register: result
+      until: result.status == 200
+      retries: "1000"
+      delay: "10" # wait between checks

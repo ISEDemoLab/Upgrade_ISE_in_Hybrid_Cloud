@@ -1,0 +1,26 @@
+---
+- name: Register ISE Deployment to Smart Licensing
+  hosts: localhost
+  connection: ansible.netcommon.network_cli
+  gather_facts: false
+  vars_files:
+    - ../../vars/main.yaml
+    - ../../vars/banners.yaml
+
+  tasks:
+
+    - name: Create ISE License Registration
+      cisco.ise.licensing_registration_create:
+        ise_hostname: "{{ upg_ppan }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        connectionType: "HTTP_DIRECT"
+        registrationType: "REGISTER"
+        # ssmOnPremServer: string
+        tier:
+        - ESSENTIAL
+        - ADVANTAGE
+        - PREMIER
+        - DEVICEADMIN
+        token: "{{ license_token }}"

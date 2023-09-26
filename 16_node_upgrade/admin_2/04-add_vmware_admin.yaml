@@ -1,0 +1,58 @@
+---
+- name: Add nodes to the Deployment
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../../vars/main.yaml
+    - ../../vars/banners.yaml
+
+  tasks:
+
+  # ------------------------------------------------------------------------
+  # Secondary Admin Node
+  # Add the secondary Admin Node to the deployment
+  # ------------------------------------------------------------------------
+
+    - name: Add ISE Node to the Deployment | {{ upg_ppan }}
+      cisco.ise.node_deployment:
+        ise_hostname: "{{ upg_span }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        ise_debug: "{{ ise_debug }}"
+        state: present
+        userName: "{{ ise_username }}"
+        password: "{{ ise_init_password }}"
+        hostname: vmware-admin
+        fqdn: "{{ upg_ppan }}"
+        allowCertImport: true
+        roles: 
+          - SecondaryAdmin
+        services: []
+      ignore_errors: yes
+      register: node_registration
+
+    - name: Wait for new Nodes to sync to deployment database | {{ upg_ppan }}
+      ansible.builtin.debug:
+        msg: |
+           
+           ________
+            (    )
+             \../
+              )(     Wait ~20 minutes for Node Sync
+             /  \    
+            (::::)
+           --------
+
+    - name: Wait for ISE Node Synchronization ⏳
+      cisco.ise.node_deployment_info:
+        ise_hostname: "{{ upg_span }}" 
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        ise_debug: "{{ ise_debug }}"
+      register: node_deployment_info
+      until: node_deployment_info.ise_response | selectattr('nodeStatus', '!=', 'Connected') | count == 0
+      delay: 30 # Default: 0. Seconds to delay between retries
+      retries: 240
+      timeout: 3600 # retries * delay. Default: 300. Stop checking after <seconds>

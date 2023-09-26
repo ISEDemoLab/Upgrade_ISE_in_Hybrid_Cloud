@@ -1,0 +1,50 @@
+---
+- name: Delete Primary ISE Admin Node from VMware ESXi Host
+  gather_facts: false
+  hosts: localhost
+  connection: local
+  vars_files:
+    - ../../vars/main.yaml
+    - ../../vars/banners.yaml
+
+  tasks:
+
+#--------------------------------------------------------------------------
+# This playbook will DELETE the VM from the ESXi host. The force command
+# will delete a VM that is powered-on
+#
+#--------------------------------------------------------------------------
+
+    - name: Delete ISE Primary Admin Node (3.2) | 🕑 ~12s
+      community.vmware.vmware_guest:
+        validate_certs: no
+        name: "vmware-admin"
+        state: absent
+        force: yes
+
+    - name: Skynet (a division of Cyberdyne Systems) Thanks You! 🖧
+      ansible.builtin.debug:
+        msg: |
+                                                  ,,                                        
+                                                ,####,                                      
+                                              ,########,                                    
+                                            ,############,                                 
+                                          ,################,                               
+                                        '####################'                              
+                                     .#.  '################'  .#.                           
+                                   ,#####,  '############'  ,#####,                        
+                                 ,##########,  "######"  ,##########,                      
+                               ,##############,  "##"  ,##############,                    
+                             ,##################,    ,##################,                  
+                           ,######################  ######################,               
+                         ,########################  ########################,             
+                       ,##########################  ##########################,           
+                     ,############################  ############################,         
+                   ,##############################  ##############################,       
+                                                                                           
+                  #@NNNNNNNNN ]$F ,g@$M @@      ]@F j@@@g    $@ @NNNNNNN% %%N$ @N&N
+                  ]@@@@@@@@@m,]$@@@"    %&@@@@@@@$F ]$ "%$g  $@ @@@@@@@@@    ][           
+                  ,ggggggggg$']$["*%@g,   yyyyyyy$F ]$    %Q@@@ @wwwwwwgw    ][            
+                   "```"````` `"`    ```  `""""'``  ``      '`  ``"``````    ``   
+           
+                                    This instance has been TERMINATED

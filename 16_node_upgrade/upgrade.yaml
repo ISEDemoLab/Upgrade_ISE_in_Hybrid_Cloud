@@ -1,0 +1,12 @@
+---
+- name: Upgrade Secondary Admin Node
+  ansible.builtin.import_playbook: admin_1/secondary_admin.yaml
+
+- name: Upgrade Iteration 1 PSNs
+  ansible.builtin.import_playbook: iteration_1/main.yaml
+
+- name: Upgrade Iteration 2 PSNs
+  ansible.builtin.import_playbook: iteration_2/main.yaml
+
+- name: Upgrade Primary Admin Node
+  ansible.builtin.import_playbook: admin_2/primary_admin.yaml

@@ -1,0 +1,69 @@
+---
+- name: Configure FTP Repository on ISE node
+  gather_facts: false
+  hosts: localhost
+  vars_files:
+    - ../../vars/main.yaml
+    - ../../vars/banners.yaml
+
+  tasks:
+   
+  # ------------------------------------------------------------------------
+  # Create a repository from which you copy the public key file.
+  # CDROM and DISK repositories do not use the `userName` or `password`
+  # fields for the repository as shown in the DISK repository example.
+  # Supported Repository Types are:
+  # - CDROM
+  # - DISK
+  # - FTP
+  # - HTTP
+  # - HTTPS
+  # - NFS
+  # - SFTP
+  # - TFTP
+  # ------------------------------------------------------------------------
+
+    - name: Create FTP Repository on azure-psn2
+      cisco.ise.repository:
+        ise_hostname: "azure-psn2.securitydemo.net" # FQDN or IP Address
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_init_password }}"
+        ise_verify: "{{ ise_verify }}"
+        state: present
+        enablePki: false
+        name: FTP
+        password: "{{ repo_password }}"
+        path: /
+        protocol: FTP
+        serverName: 10.1.100.6 # FQDN or IP Address
+        userName: "{{ repo_user }}" 
+
+    - name: Create FTP Repository on oci-psn2
+      cisco.ise.repository:
+        ise_hostname: "oci-psn2.securitydemo.net" # FQDN or IP Address
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_init_password }}"
+        ise_verify: "{{ ise_verify }}"
+        state: present
+        enablePki: false
+        name: FTP
+        password: "{{ repo_password }}"
+        path: /
+        protocol: FTP
+        serverName: 10.1.100.6 # FQDN or IP Address
+        userName: "{{ repo_user }}" 
+
+    - name: Create FTP Repository on aws-psn2
+      cisco.ise.repository:
+        ise_hostname: "aws-psn2.securitydemo.net" # FQDN or IP Address
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_init_password }}"
+        ise_verify: "{{ ise_verify }}"
+        state: present
+        enablePki: false
+        name: FTP
+        password: "{{ repo_password }}"
+        path: /
+        protocol: FTP
+        serverName: 10.1.100.6 # FQDN or IP Address
+        userName: "{{ repo_user }}" 

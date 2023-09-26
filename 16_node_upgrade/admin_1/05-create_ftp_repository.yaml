@@ -1,0 +1,24 @@
+---
+- name: Configure FTP Repository on ISE node
+  gather_facts: false
+  hosts: localhost
+  vars_files:
+    - ../../vars/main.yaml
+    - ../../vars/banners.yaml
+
+  tasks:
+   
+    - name: Create FTP Repository on vmware-sadmin
+      cisco.ise.repository:
+        ise_hostname: "{{ upg_span }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_init_password }}"
+        ise_verify: "{{ ise_verify }}"
+        state: present
+        enablePki: false
+        name: FTP
+        password: "{{ repo_password }}"
+        path: /
+        protocol: FTP
+        serverName: 10.1.100.6 # FQDN or IP Address
+        userName: "{{ repo_user }}" 

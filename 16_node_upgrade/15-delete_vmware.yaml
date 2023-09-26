@@ -1,0 +1,76 @@
+---
+- name: Delete ISE Admin Nodes from VMware ESXi Host
+  gather_facts: false
+  hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars/main.yaml
+    - ../vars/banners.yaml
+
+  tasks:
+
+#--------------------------------------------------------------------------
+# This playbook will DELETE the VM from the ESXi host. The force command
+# will delete a VM that is powered-on
+#
+#--------------------------------------------------------------------------
+
+    - name: Delete ISE Primary Admin Node | 🕑 ~12s
+      community.vmware.vmware_guest:
+        validate_certs: no
+        name: "vmware-admin"
+        state: absent
+        force: yes
+
+    - name: Delete ISE Secondary Admin Node | 🕑 ~12s
+      community.vmware.vmware_guest:
+        validate_certs: no
+        name: "vmware-sadmin"
+        state: absent
+        force: yes
+
+    - name: Delete ISE Primary MnT Node | 🕑 ~12s
+      community.vmware.vmware_guest:
+        validate_certs: no
+        name: "vmware-mnt"
+        state: absent
+        force: yes
+      ignore_errors: yes # Errors do not stop execution
+
+    - name: Delete ISE Secondary MnT Node | 🕑 ~12s
+      community.vmware.vmware_guest:
+        validate_certs: no
+        name: "vmware-smnt"
+        state: absent
+        force: yes
+      ignore_errors: yes # Errors do not stop execution
+
+    - name: Refresh inventory to ensure deleted instances are removed from inventory ⟳
+      ansible.builtin.meta: refresh_inventory
+
+    - name: Skynet (a division of Cyberdyne Systems) Thanks You! 🖧
+      ansible.builtin.debug:
+        msg: |
+                                                  ,,                                        
+                                                ,####,                                      
+                                              ,########,                                    
+                                            ,############,                                 
+                                          ,################,                               
+                                        '####################'                              
+                                     .#.  '################'  .#.                           
+                                   ,#####,  '############'  ,#####,                        
+                                 ,##########,  "######"  ,##########,                      
+                               ,##############,  "##"  ,##############,                    
+                             ,##################,    ,##################,                  
+                           ,######################  ######################,               
+                         ,########################  ########################,             
+                       ,##########################  ##########################,           
+                     ,############################  ############################,         
+                   ,##############################  ##############################,       
+                                                                                           
+                  #@NNNNNNNNN ]$F ,g@$M @@      ]@F j@@@g    $@ @NNNNNNN% %%N$ @N&N
+                  ]@@@@@@@@@m,]$@@@"    %&@@@@@@@$F ]$ "%$g  $@ @@@@@@@@@    ][           
+                  ,ggggggggg$']$["*%@g,   yyyyyyy$F ]$    %Q@@@ @wwwwwwgw    ][            
+                   "```"````` `"`    ```  `""""'``  ``      '`  ``"``````    ``   
+           
+                                    This instance has been TERMINATED

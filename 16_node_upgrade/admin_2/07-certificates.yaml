@@ -1,0 +1,68 @@
+---
+- name: Import certificates into ISE
+  gather_facts: false
+  hosts: localhost
+  vars_files:
+    - ../../vars/main.yaml
+    - ../../vars/banners.yaml
+    - ../../.cert/ise_certs.yaml
+
+  tasks:
+
+    - name: Import securitydemo.net system certificate on vmware-admin
+      cisco.ise.system_certificate_import:
+        ise_hostname: "{{ upg_ppan }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        admin: "true"
+        allowExtendedValidity: "false"
+        allowOutOfDateCert: "false"
+        allowPortalTagTransferForSameSubject: "true"
+        allowReplacementOfCertificates: "true"
+        allowReplacementOfPortalGroupTag: "true"
+        allowRoleTransferForSameSubject: "true"
+        allowSHA1Certificates: "false"
+        allowWildCardCertificates: "true"
+        data: "{{ certificate }}"
+        eap: "false"
+        ims: "false"
+        name: securitydemo.net
+        password: "{{ pvk_password }}"
+        portal: "true"
+        portalGroupTag: "Default Portal Certificate Group"
+        privateKeyData: "{{ private_key }}"
+        pxgrid: "false"
+        radius: "false"
+        saml: "false"
+        validateCertificateExtensions: "false"
+
+    - name: 🛑 Pause for 1 Minute to for Services to Stop 🛑
+      ansible.builtin.pause:
+        seconds: 60
+        
+    - name: Wait for ISE App Server on Primary Admin Node to Come Up ∆ ∆ ∆
+      ansible.builtin.debug:
+        msg: |
+           
+           ________
+            (    )
+             \../
+              )(     Wait for ISE AppServer to Come Up ∆ ∆ ∆
+             /  \    on vmware-admin
+            (::::)
+           --------
+
+    - name: ISE Login ⮕ | vmware-admin
+      delegate_to: localhost
+      ansible.builtin.uri:
+        url: https://vmware-admin.securitydemo.net/admin/login.jsp
+        method: GET
+        follow_redirects: safe
+        timeout: "3"
+        validate_certs: "no"
+        return_content: no
+      register: result
+      until: result.status == 200
+      retries: "1000"
+      delay: "10" # wait between checks

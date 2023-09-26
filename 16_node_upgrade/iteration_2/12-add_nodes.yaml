@@ -1,0 +1,176 @@
+---
+- name: Add nodes to the Deployment
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../../vars/main.yaml
+    - ../../vars/banners.yaml
+
+# ------------------------------------------------------------------------
+# Ⰹ ISE REST API: POST /api/v1/deployment/node/
+# Registers a Cisco ISE node to form a multi-node deployment.
+# Approximate execution time - 300 seconds.
+#
+# Roles: # use [] (no roles) for dedicated PSN
+# - Standalone
+# - PrimaryAdmin
+# - PrimaryMonitoring
+# - SecondaryAdmin
+# - SecondaryMonitoring
+# - PrimaryDedicatedMonitoring
+# - SecondaryDedicatedMonitoring
+#
+# Services: # use [] (no services) for dedicated PAN/MNT
+# - DeviceAdmin
+# - Profiler
+# - Session
+# - pxGrid
+# - pxGridCloud
+# - PassiveIdentity
+# - SXP
+# - TC-NAC
+# ------------------------------------------------------------------------
+  tasks:
+
+  # ------------------------------------------------------------------------
+  # 🛈 You can use a single task to register multiple nodes to
+  # the deployment.  This task uses the `loop` function to cycle through
+  # the list of nodes (`fqdn` starts each entry as denoted by the `-`).
+  #
+  # ⚠ To use the `loop` function, all ISE node passwords must be the
+  # ⚠ same.  If you haven't updated the password for any cloud-deployed
+  # ⚠ or ZTP-enabled nodes, do that first.
+  # ------------------------------------------------------------------------
+
+    - name: Register the Cloud-based PSNs to the upgraded deployment 
+      cisco.ise.personas_register_node:
+        primary_ip: "10.1.100.41"
+        primary_username: "{{ ise_username }}"
+        primary_password: "{{ ise_password }}"
+        fqdn: "{{ item.fqdn }}"
+        username: "{{ ise_username }}"
+        password: "{{ ise_init_password }}"
+        roles: "{{ item.roles }}"
+        services: "{{ item.services }}"
+      loop:
+        - fqdn: "vmware-smnt.securitydemo.net"
+          roles: 
+            - SecondaryMonitoring
+          services: []
+        - fqdn: "azure-psn2.securitydemo.net"
+          roles: []
+          services: 
+            - Session
+            - Profiler
+        - fqdn: "oci-psn2.securitydemo.net"
+          roles: []
+          services:
+            - Session
+            - Profiler
+            - pxGrid
+        - fqdn: "aws-psn2.securitydemo.net"
+          roles: []
+          services:
+            - Session
+            - Profiler
+            - DeviceAdmin
+        - fqdn: "azure-psn4.securitydemo.net"
+          roles: []
+          services: 
+            - Session
+            - Profiler
+        - fqdn: "oci-psn4.securitydemo.net"
+          roles: []
+          services:
+            - Session
+            - Profiler
+            - pxGrid
+        - fqdn: "aws-psn4.securitydemo.net"
+          roles: []
+          services:
+            - Session
+            - Profiler
+            - DeviceAdmin
+
+    - name: Add azure-psn2 to Node Group 'WestUS'
+      cisco.ise.node_group_node_create:
+        ise_hostname: "{{ upg_span }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        hostname: azure-psn2
+        nodeGroupName: WestUS
+
+    - name: Add oci-psn2 to Node Group 'CentralUS'
+      cisco.ise.node_group_node_create:
+        ise_hostname: "{{ upg_span }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        hostname: oci-psn2
+        nodeGroupName: CentralUS
+
+    - name: Add aws-psn2 to Node Group 'EastUS'
+      cisco.ise.node_group_node_create:
+        ise_hostname: "{{ upg_span }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        hostname: aws-psn2
+        nodeGroupName: EastUS
+
+    - name: Add azure-psn2 to Node Group 'WestUS'
+      cisco.ise.node_group_node_create:
+        ise_hostname: "{{ upg_span }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        hostname: azure-psn4
+        nodeGroupName: WestUS
+
+    - name: Add oci-psn2 to Node Group 'CentralUS'
+      cisco.ise.node_group_node_create:
+        ise_hostname: "{{ upg_span }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        hostname: oci-psn4
+        nodeGroupName: CentralUS
+
+    - name: Add aws-psn2 to Node Group 'EastUS'
+      cisco.ise.node_group_node_create:
+        ise_hostname: "{{ upg_span }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        hostname: aws-psn4
+        nodeGroupName: EastUS
+  # ------------------------------------------------------------------------
+  # Monitor the Sync status for all registered nodes.  Once all nodes 
+  # have the status `Connected`, the task completes.
+  # ------------------------------------------------------------------------
+
+    - name: Wait for PSNs to sync to deployment database
+      ansible.builtin.debug:
+        msg: |
+           
+           ________
+            (    )
+             \../
+              )(     Wait ~25 minutes for Node Sync
+             /  \    
+            (::::)
+           --------
+
+    - name: Wait for ISE Node Synchronization
+      cisco.ise.node_deployment_info:
+        ise_hostname: "{{ upg_span }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        ise_debug: "{{ ise_debug }}"
+      register: node_deployment_info
+      until: node_deployment_info.ise_response | selectattr('nodeStatus', '!=', 'Connected') | count == 0
+      delay: 30 # Default: 0. Seconds to delay between retries
+      retries: 240
+      timeout: 3600 # retries * delay. Default: 300. Stop checking after <seconds>

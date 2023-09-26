@@ -1,0 +1,68 @@
+---
+- name: Create a an ISE 3.3 PSN in Azure
+  gather_facts: false
+  hosts: localhost
+  connection: local
+  vars_files:
+    - ../../vars/main.yaml
+    - ../../vars/banners.yaml
+
+  tasks:
+
+    - name: Create an ISE Resource Manager Deployment | azure-psn2 ⏳
+      azure_rm_deployment:
+        resource_group: "{{ az_resource_group }}"
+        name: "azure-psn2"
+        template_link: 'http://isedemolab.com/endpoints/ise33-azuredeploy.json'
+        parameters_link: http://isedemolab.com/endpoints/ise33-2-azuredeploy.parameters.json'        
+
+    - name: Add tags to ISE VM | azure-psn2 🏷️
+      azure_rm_virtualmachine:
+        resource_group: "{{ az_resource_group }}"
+        name: azure-psn2
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+         role: "PSN"
+         version: "3.3"
+
+    - name: Create an ISE Resource Manager Deployment | azure-psn4 ⏳
+      azure_rm_deployment:
+        resource_group: "{{ az_resource_group }}"
+        name: "azure-psn4"
+        template_link: 'http://isedemolab.com/endpoints/ise33-azuredeploy.json'
+        parameters_link: http://isedemolab.com/endpoints/ise33-4-azuredeploy.parameters.json'        
+
+    - name: Add tags to ISE VM | azure-psn4 🏷️
+      azure_rm_virtualmachine:
+        resource_group: "{{ az_resource_group }}"
+        name: azure-psn4
+        tags:
+         project: "{{ project_name }}"
+         owner: "{{ owner }}"
+         started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+         role: "PSN"
+         version: "3.3"
+
+    - name: azure-psn2 has been deployed!
+      ansible.builtin.debug:
+        msg: |
+          {{bar}}                    ,r                  
+          {{bar}}                  ,@F  g                
+          {{bar}}               ,g@$F  ]$k               
+          {{bar}}             ,@$$$F  ,$$$@              
+          {{bar}}          ,g@$$$$F   @$$$$$,            
+          {{bar}}         ,$$$$$$F   #$$$$$$$k           
+          {{bar}}        g$$$$$$F   /$$$$$$$$$k          
+          {{bar}}       g$$$$$$F    $$$$$$$$$$$@         
+          {{bar}}      @$$$$$$F      *$$$$$$$$$$$,       
+          {{bar}}    ,$$$$$$$F         %$$$$$$$$$$k      
+          {{bar}}   /$$$$$$$F           '$$$$$$$$$$k     
+          {{bar}}  g$$$$$$$F              "$$$$$$$$$k    
+          {{bar}} NNNNNNNNF                 *$$$$$$$$@   
+          {{bar}}                 ,,,ggg&@@@$$$$$$$$$$$y 
+          {{bar}}          ````````````````````````````` 
+
+    - name: Refresh inventory to ensure new instances exist in inventory ⟳
+      ansible.builtin.meta: refresh_inventory

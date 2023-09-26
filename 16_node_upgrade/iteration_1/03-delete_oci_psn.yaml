@@ -1,0 +1,54 @@
+---
+- name: Delete ISE 3.2 PSN from OCI
+  gather_facts: false
+  hosts: localhost
+  collections:
+    - oracle.oci
+  vars_files:
+    - ../../vars/main.yaml
+    - ../../vars/banners.yaml
+
+  tasks:
+
+    - name: Delete oci-psn 💀 | 🕑 ~65s
+      oci_compute_instance:
+        compartment_id: "{{ instance_compartment }}"
+        display_name: "oci-psn"
+        state: absent
+      environment:
+        OCI_USE_NAME_AS_IDENTIFIER: 1
+
+    - name: Delete oci-psn3 💀 | 🕑 ~65s
+      oci_compute_instance:
+        compartment_id: "{{ instance_compartment }}"
+        display_name: "oci-psn3"
+        state: absent
+      environment:
+        OCI_USE_NAME_AS_IDENTIFIER: 1
+
+    - name: Skynet (a division of Cyberdyne Systems) Thanks You! 🖧
+      ansible.builtin.debug:
+        msg: |
+                                                  ,,                                        
+                                                ,####,                                      
+                                              ,########,                                    
+                                            ,############,                                 
+                                          ,################,                               
+                                        '####################'                              
+                                     .#.  '################'  .#.                           
+                                   ,#####,  '############'  ,#####,                        
+                                 ,##########,  "######"  ,##########,                      
+                               ,##############,  "##"  ,##############,                    
+                             ,##################,    ,##################,                  
+                           ,######################  ######################,               
+                         ,########################  ########################,             
+                       ,##########################  ##########################,           
+                     ,############################  ############################,         
+                   ,##############################  ##############################,       
+                                                                                           
+                  #@NNNNNNNNN ]$F ,g@$M @@      ]@F j@@@g    $@ @NNNNNNN% %%N$ @N&N
+                  ]@@@@@@@@@m,]$@@@"    %&@@@@@@@$F ]$ "%$g  $@ @@@@@@@@@    ][           
+                  ,ggggggggg$']$["*%@g,   yyyyyyy$F ]$    %Q@@@ @wwwwwwgw    ][            
+                   "```"````` `"`    ```  `""""'``  ``      '`  ``"``````    ``   
+           
+                                   This instance has been TERMINATED

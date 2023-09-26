@@ -1,0 +1,201 @@
+---
+- name: Create the Secondary Admin Node & MnT Nodes in VMware
+  gather_facts: false
+  hosts: localhost
+  connection: local
+  vars_files:
+    - ../../vars/main.yaml
+    - ../../vars/banners.yaml
+
+#--------------------------------------------------------------------------
+# This playbook will Deploy ISE to an ESXi Host, attach the ztp.iso, and
+# power on the VM
+#--------------------------------------------------------------------------
+
+  tasks:
+
+    - name: Deploy {{ upg_span }} version 3.3 on ESXi
+      community.vmware.vmware_guest:
+        name: vmware-sadmin
+        state: poweredoff
+        datastore: "{{ datastore }}"
+        guest_id: rhel8_64Guest
+        folder: /
+        disk:
+        - size_gb: 300
+          type: thin
+          controller_number: 0
+          unit_number: 0
+          controller_type: paravirtual
+          datastore: "[{{ datastore }}]"
+          disk_mode: persistent
+        networks: 
+        - name: '{{ ProvisioningNetworkLabel }}'
+        cdrom:
+        - type: "iso"
+          iso_path: "[{{ iso_datastore }}] /{{ ise33_iso }}"
+          controller_number: 0
+          unit_number: 0
+        - type: "iso"
+          iso_path: "[{{ datastore }}] /ISO/ZTP/vmware-sadmin.iso"
+          controller_number: 1
+          unit_number: 0
+        hardware:
+          boot_firmware: "bios"
+          memory_mb: 32768
+          num_cpus: 16
+          num_cpu_cores_per_socket: 4
+          cpu_reservation: 32000
+          mem_reservation: 32768
+          memory_reservation_lock: true
+          scsi: paravirtual
+          version: latest
+        validate_certs: no
+      delegate_to: localhost
+      register: deploy_vm
+      ignore_errors: yes
+
+    - name: Power on virtual machine
+      community.vmware.vmware_guest_powerstate:
+        validate_certs: false
+        name: vmware-sadmin
+        state: powered-on
+
+    - name: Deploy vmware-mnt version 3.3 on ESXi
+      community.vmware.vmware_guest:
+        name: vmware-mnt
+        state: poweredoff
+        datastore: "{{ datastore }}"
+        guest_id: rhel8_64Guest
+        folder: /
+        disk:
+        - size_gb: 300
+          type: thin
+          controller_number: 0
+          unit_number: 0
+          controller_type: paravirtual
+          datastore: "[{{ datastore }}]"
+          disk_mode: persistent
+        networks: 
+        - name: '{{ ProvisioningNetworkLabel }}'
+        cdrom:
+        - type: "iso"
+          iso_path: "[{{ iso_datastore }}] /{{ ise33_iso }}"
+          controller_number: 0
+          unit_number: 0
+        - type: "iso"
+          iso_path: "[{{ datastore }}] /ISO/ZTP/vmware-mnt.iso"
+          controller_number: 1
+          unit_number: 0
+        hardware:
+          boot_firmware: "bios"
+          memory_mb: 32768
+          num_cpus: 16
+          num_cpu_cores_per_socket: 4
+          cpu_reservation: 32000
+          mem_reservation: 32768
+          memory_reservation_lock: true
+          scsi: paravirtual
+          version: latest
+        validate_certs: no
+      delegate_to: localhost
+      register: deploy_vm
+      ignore_errors: yes
+
+    - name: Deploy vmware-smnt version 3.3 on ESXi
+      community.vmware.vmware_guest:
+        name: vmware-smnt
+        state: poweredoff
+        datastore: "{{ datastore }}"
+        guest_id: rhel8_64Guest
+        folder: /
+        disk:
+        - size_gb: 300
+          type: thin
+          controller_number: 0
+          unit_number: 0
+          controller_type: paravirtual
+          datastore: "[{{ datastore }}]"
+          disk_mode: persistent
+        networks: 
+        - name: '{{ ProvisioningNetworkLabel }}'
+        cdrom:
+        - type: "iso"
+          iso_path: "[{{ iso_datastore }}] /{{ ise33_iso }}"
+          controller_number: 0
+          unit_number: 0
+        - type: "iso"
+          iso_path: "[{{ datastore }}] /ISO/ZTP/vmware-smnt.iso"
+          controller_number: 1
+          unit_number: 0
+        hardware:
+          boot_firmware: "bios"
+          memory_mb: 32768
+          num_cpus: 16
+          num_cpu_cores_per_socket: 4
+          cpu_reservation: 32000
+          mem_reservation: 32768
+          memory_reservation_lock: true
+          scsi: paravirtual
+          version: latest
+        validate_certs: no
+      delegate_to: localhost
+      register: deploy_vm
+      ignore_errors: yes
+
+    - name: Power on virtual machine
+      community.vmware.vmware_guest_powerstate:
+        validate_certs: false
+        name: vmware-mnt
+        state: powered-on
+
+    - name: 🛑 Pause for 15 seconds to allow ISO mapping 🛑
+      ansible.builtin.pause:
+        seconds: 15
+
+    - name: Power on virtual machine
+      community.vmware.vmware_guest_powerstate:
+        validate_certs: false
+        name: vmware-smnt
+        state: powered-on
+
+    - name: Your Primary Admin Node has been deployed!
+      ansible.builtin.debug:
+        msg: |
+          {{bar}}(@@,     g@@@@g,g@@@@g,g@@@@g  @k     g@      @F g@@%%@g,   @L,g@@  ,g@NNBw  
+          {{bar}} $@@    g@@P`@@@P``]@@@P``]@@@ '@C   ,@]@    #@         $K  @@P    @P     '@w 
+          {{bar}}  $@@  g@@P  @@@    @@@    @@@  ]@   @` ]@  /@   gg%NN%m@@  @$    ]@ggggggg#@   
+          {{bar}}   $@@g@@P   @@@    @@@    @@@   ]@ @F   $k,@`  @F      [@  @F    ]@            
+          {{bar}}    $@@@P    @@@    @@@    @@@    $@@     @@F   %@,   ,g$@  @F     "$g,  ,g@    
+          {{bar}}     ""`      "`    `"`    '"`     "       `      """"  '`  "         """"  
+          {{bar}}
+          {{bar}}                Your NEW ISE 3.3 Primary Admin Node has been deployed!
+          
+    - name: Refresh inventory to ensure new instances exist in inventory ⟳
+      ansible.builtin.meta: refresh_inventory
+
+    - name: Wait for ISE App Server on Secondary Admin Node to Come Up ∆ ∆ ∆
+      ansible.builtin.debug:
+        msg: |
+           
+           ________
+            (    )
+             \../
+              )(     Wait for ISE AppServer to Come Up ∆ ∆ ∆
+             /  \    on vmware-sadmin
+            (::::)
+           --------
+
+    - name: ISE Login ⮕ | vmware-sadmin | 🕑 ~50m
+      delegate_to: localhost
+      ansible.builtin.uri:
+        url: https://vmware-sadmin.securitydemo.net/admin/login.jsp
+        method: GET
+        follow_redirects: safe
+        timeout: "3"
+        validate_certs: "no"
+        return_content: no
+      register: result
+      until: result.status == 200
+      retries: "1000"
+      delay: "10" # wait between checks
