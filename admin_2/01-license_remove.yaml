@@ -8,18 +8,18 @@
 
   tasks:
 
-  - name: Remove ISE License Registration
-    cisco.ise.licensing_registration_create:
-      ise_hostname: "{{ upg_ppan }}"
-      ise_username: "{{ ise_username }}"
-      ise_password: "{{ ise_password }}"
-      ise_verify: "{{ ise_verify }}"
-      connectionType: "HTTP_DIRECT"
-      registrationType: "DEREGISTER"
-      # ssmOnPremServer: string
-      tier:
-      - ESSENTIAL
-      - ADVANTAGE
-      - PREMIER
-      - DEVICEADMIN
-      token: "{{ license_token }}"
+    - name: Remove ISE License Registration
+      cisco.ise.licensing_registration_create:
+        ise_hostname: "{{ upg_ppan }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        connectionType: "HTTP_DIRECT"
+        registrationType: "DEREGISTER"
+        # ssmOnPremServer: string
+        tier:
+        - ESSENTIAL
+        - ADVANTAGE
+        - PREMIER
+        - DEVICEADMIN
+        token: "{{ license_token }}"

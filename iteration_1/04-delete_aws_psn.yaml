@@ -8,51 +8,51 @@
 
   tasks:
 
-  - name: Delete aws-psn 💀 | 🕑 ~150s
-    amazon.aws.ec2_instance:
-      state: terminated     # ensures an existing instance is terminated.
-      name: "aws-psn"
-      region: "{{ aws_region }}"
-      key_name: "{{ aws_ssh_key }}"
-      vpc_subnet_id: "{{ private_subnet_id }}"
-      # image_id: "{{ ise32_ami }}" # Enabling this will only delete a 3.2 instance
-      instance_type: "{{ instance_type }}"
-      network:
-        private_ip_address: "192.168.104.110"
-      security_group: "{{ security_group }}" #  SG_Public # name or ID
-      volumes:
-        - device_name: /dev/sda1
-          ebs:
-            volume_size: "300"
-            delete_on_termination: true
-      wait: yes
+    - name: Delete aws-psn 💀 | 🕑 ~150s
+      amazon.aws.ec2_instance:
+        state: terminated     # ensures an existing instance is terminated.
+        name: "aws-psn"
+        region: "{{ aws_region }}"
+        key_name: "{{ aws_ssh_key }}"
+        vpc_subnet_id: "{{ private_subnet_id }}"
+        # image_id: "{{ ise32_ami }}" # Enabling this will only delete a 3.2 instance
+        instance_type: "{{ instance_type }}"
+        network:
+          private_ip_address: "192.168.104.110"
+        security_group: "{{ security_group }}" #  SG_Public # name or ID
+        volumes:
+          - device_name: /dev/sda1
+            ebs:
+              volume_size: "300"
+              delete_on_termination: true
+        wait: yes
 
-  - name: Refresh inventory to ensure deleted instances are removed from inventory ⟳
-    ansible.builtin.meta: refresh_inventory
+    - name: Refresh inventory to ensure deleted instances are removed from inventory ⟳
+      ansible.builtin.meta: refresh_inventory
 
-  - name: Skynet (a division of Cyberdyne Systems) Thanks You! 🖧
-    ansible.builtin.debug:
-      msg: |
-                                                  ,,                                        
-                                                ,####,                                      
-                                              ,########,                                    
-                                            ,############,                                 
-                                          ,################,                               
-                                        '####################'                              
-                                     .#.  '################'  .#.                           
-                                   ,#####,  '############'  ,#####,                        
-                                 ,##########,  "######"  ,##########,                      
-                               ,##############,  "##"  ,##############,                    
-                             ,##################,    ,##################,                  
-                           ,######################  ######################,               
-                         ,########################  ########################,             
-                       ,##########################  ##########################,           
-                     ,############################  ############################,         
-                   ,##############################  ##############################,       
-                                                                                           
-                  #@NNNNNNNNN ]$F ,g@$M @@      ]@F j@@@g    $@ @NNNNNNN% %%N$ @N&N
-                  ]@@@@@@@@@m,]$@@@"    %&@@@@@@@$F ]$ "%$g  $@ @@@@@@@@@    ][           
-                  ,ggggggggg$']$["*%@g,   yyyyyyy$F ]$    %Q@@@ @wwwwwwgw    ][            
-                   "```"````` `"`    ```  `""""'``  ``      '`  ``"``````    ``   
-           
-                                   This instance has been TERMINATED                                              
+    - name: Skynet (a division of Cyberdyne Systems) Thanks You! 🖧
+      ansible.builtin.debug:
+        msg: |
+                                                    ,,                                        
+                                                  ,####,                                      
+                                                ,########,                                    
+                                              ,############,                                 
+                                            ,################,                               
+                                          '####################'                              
+                                       .#.  '################'  .#.                           
+                                     ,#####,  '############'  ,#####,                        
+                                   ,##########,  "######"  ,##########,                      
+                                 ,##############,  "##"  ,##############,                    
+                               ,##################,    ,##################,                  
+                             ,######################  ######################,               
+                           ,########################  ########################,             
+                         ,##########################  ##########################,           
+                       ,############################  ############################,         
+                     ,##############################  ##############################,       
+                                                                                             
+                    #@NNNNNNNNN ]$F ,g@$M @@      ]@F j@@@g    $@ @NNNNNNN% %%N$ @N&N
+                    ]@@@@@@@@@m,]$@@@"    %&@@@@@@@$F ]$ "%$g  $@ @@@@@@@@@    ][           
+                    ,ggggggggg$']$["*%@g,   yyyyyyy$F ]$    %Q@@@ @wwwwwwgw    ][            
+                     "```"````` `"`    ```  `""""'``  ``      '`  ``"``````    ``   
+             
+                                     This instance has been TERMINATED                                              

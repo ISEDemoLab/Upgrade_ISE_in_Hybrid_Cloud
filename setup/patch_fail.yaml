@@ -1,0 +1,33 @@
+---
+- name: Wait for Application Server to be available
+  ansible.builtin.import_playbook: reinstall_patch.yaml
+
+- name: Wait for Application Server to be available
+  ansible.builtin.import_playbook: 05-wait_for_padmin_login.yaml  
+
+- name: Wait for Application Server to be available
+  ansible.builtin.import_playbook: ../iteration_1/08-wait_for_ise_login.yaml
+
+- name: Wait for Application Server to be available
+  ansible.builtin.import_playbook: ../iteration_2/08-wait_for_ise_login.yaml
+
+- name: Add Nodes to the deployment
+  ansible.builtin.import_playbook: 09-add_nodes.yaml
+
+- name: Install CA Cert and System Cert on Primary Admin Node
+  ansible.builtin.import_playbook: 10-certificates.yaml
+
+- name: Wait for Application Server to be available
+  ansible.builtin.import_playbook: 05-wait_for_padmin_login.yaml  
+
+- name: Wait for Application Server to be available
+  ansible.builtin.import_playbook: ../iteration_1/08-wait_for_ise_login.yaml
+
+- name: Wait for Application Server to be available
+  ansible.builtin.import_playbook: ../iteration_2/08-wait_for_ise_login.yaml
+
+- name: Register to Licensing
+  ansible.builtin.import_playbook: 13-license_cssm.yaml
+
+- name: Deployment Complete!
+  ansible.builtin.import_playbook: 14-deployment_complete.yaml

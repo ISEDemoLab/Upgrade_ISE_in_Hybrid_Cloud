@@ -69,52 +69,6 @@
         saml: "false"
         validateCertificateExtensions: "false"
 
-    # - name: Import Hydrant CA Cert to Trusted Cert Store on vmware-sadmin
-    #   cisco.ise.trusted_certificate_import:
-    #     ise_hostname: "vmware-sadmin.securitydemo.net"
-    #     ise_username: "{{ ise_username }}"
-    #     ise_password: "{{ ise_init_password }}"
-    #     ise_verify: "{{ ise_verify }}"
-    #     allowBasicConstraintCAFalse: true
-    #     allowOutOfDateCert: true
-    #     allowSHA1Certificates: true
-    #     data: "{{ ca_cert }}"
-    #     description: string
-    #     name: HydrantID Server CA O1
-    #     trustForCertificateBasedAdminAuth: true
-    #     trustForCiscoServicesAuth: true
-    #     trustForClientAuth: true
-    #     trustForIseAuth: true
-    #     validateCertificateExtensions: true
-
-    # - name: Import securitydemo.net system certificate on vmware-sadmin
-    #   cisco.ise.system_certificate_import:
-    #     ise_hostname: "vmware-sadmin.securitydemo.net"
-    #     ise_username: "{{ ise_username }}"
-    #     ise_password: "{{ ise_init_password }}"
-    #     ise_verify: "{{ ise_verify }}"
-    #     admin: "true"
-    #     allowExtendedValidity: "false"
-    #     allowOutOfDateCert: "false"
-    #     allowPortalTagTransferForSameSubject: "true"
-    #     allowReplacementOfCertificates: "true"
-    #     allowReplacementOfPortalGroupTag: "true"
-    #     allowRoleTransferForSameSubject: "true"
-    #     allowSHA1Certificates: "false"
-    #     allowWildCardCertificates: "true"
-    #     data: "{{ certificate }}"
-    #     eap: "false"
-    #     ims: "false"
-    #     name: securitydemo.net
-    #     password: "{{ pvk_password }}"
-    #     portal: "true"
-    #     portalGroupTag: "Default Portal Certificate Group"
-    #     privateKeyData: "{{ private_key }}"
-    #     pxgrid: "false"
-    #     radius: "false"
-    #     saml: "false"
-    #     validateCertificateExtensions: "false"
-
     - name: 🛑 Pause for 60 seconds to for command to finish 🛑
       ansible.builtin.pause:
         seconds: 60

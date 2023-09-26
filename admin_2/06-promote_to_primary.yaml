@@ -24,7 +24,18 @@
   #   - 'hostname. Supported parameters include: ise_debug, ise_hostname, ise_password, ise_username, ise_uses_api_gateway, ise_uses_csrf_token, ise_verify, ise_version, ise_wait_on_rate_limit.' 
   #
   # -------------------------------------------------------------------------
-   
+  # ------------------------------------------------------------------------
+  # It's not unusual to receive a timeout error during the promotion.
+  # The error will contain syntax similar to:
+  #
+  # An exception occurred during task execution. To see the full traceback, use -vvv. The error was: ciscoisesdk.exceptions.ciscoisesdkException: Socket error HTTPSConnectionPool(host='vmware-admin.securitydemo.net', port=443): Read timed out. (read timeout=60)
+  # fatal: [localhost]: FAILED! => changed=false
+  #   msg: 'An error occured when executing operation. The error was: Socket error HTTPSConnectionPool(host=''vmware-admin.securitydemo.net'', port=443): Read timed out. (read timeout=60)'
+  #
+  # These errors can be ignored, as the node(s) will actually be successfully deregistered.
+  # This is why we use the `ignore_errors: yes` flag.
+  # ------------------------------------------------------------------------
+
     - name: Promote vmware-admin from Secondary to Primary Admin | vmware-admin | 🕑 ~60s
       cisco.ise.node_secondary_to_primary:
         ise_hostname: "{{upg_ppan}}" # Must run this on the Secondary Admin Node
@@ -38,7 +49,7 @@
       ansible.builtin.pause:
         seconds: 180
 
-    - name: Wait for ISE App Server on Primary Admin Node to Come Up ∆ ∆ ∆
+    - name: Wait for ISE App Server on Secondary Admin Node to Come Up ∆ ∆ ∆
       ansible.builtin.debug:
         msg: |
            
@@ -64,7 +75,7 @@
       retries: "1000"
       delay: "10" # wait between checks
 
-    - name: Wait for ISE App Server on Secondary Admin Node to Come Up ∆ ∆ ∆
+    - name: Wait for ISE App Server on Primary Admin Node to Come Up ∆ ∆ ∆
       ansible.builtin.debug:
         msg: |
            

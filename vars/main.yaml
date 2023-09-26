@@ -113,7 +113,7 @@ az_vn_name: "isedemolab-vn"
 az_vn_cidr: 192.168.100.0/23
 az_vn_private_subnet_cidr: 192.168.100.0/24
 az_vn_gateway_subnet_cidr: 192.168.101.0/24
-az_security_group: "sg_chmnoreto"
+az_security_group: "sg_chmoreto"
 az_private_subnet: "Production"
 local_nw_cidr: 10.1.100.0/24
 #

@@ -1,0 +1,129 @@
+---
+- name: Install ISE Patch
+  gather_facts: false
+  hosts: localhost
+  # connection: local
+  vars_files:
+    - ../vars/main.yaml
+    - ../vars/banners.yaml
+
+  tasks:
+  
+  - name: Rollback Patch 3
+    cisco.ise.patch_rollback:
+      ise_hostname: "vmware-sadmin.securitydemo.net"
+      ise_username: "{{ ise_username }}"
+      ise_password: "{{ ise_init_password }}"
+      ise_verify: "{{ ise_verify }}"
+      patchNumber: 3
+
+  - name: Wait for ISE App Server Going Down ∇ ∇ ∇ Banner
+    when: ise_restore_task_id is defined
+    ansible.builtin.debug:
+      msg: |
+         
+         ________
+          (    )
+           \../
+            )(     Wait ~5 minutes for ISE AppServer To Go Down  ∇ ∇ ∇ 
+           /  \
+          (::::)
+         --------
+         
+  
+  - name: Wait for ISE App Server to Go Down ∇ ∇ ∇ | 🕑 ~3-5m
+    delegate_to: localhost
+    when: ise_restore_task_id is defined
+    ansible.builtin.wait_for:
+      host: "{{ upg_span }}"
+      port: 443 # GUI / REST / API Gateway
+      state: stopped # Port is CLOSED [started (default)|stopped|present|absent|drained]
+      sleep: 10 # Seconds to sleep between checks; Default: 1
+      timeout: "{{ 60 * 60 }}" # 3600s == 1 hour # Default: 300. Stop checking after <seconds>
+    ignore_errors: true # Errors do not stop execution
+  
+  - name: Wait for ISE App Server to Come Up ∆ ∆ ∆ Banner
+    when: ise_restore_task_id is defined
+    ansible.builtin.debug:
+      msg: |
+         
+         ________
+          (    )
+           \../
+            )(     Wait ~25 minutes for ISE App Server To Come Up ∆ ∆ ∆
+           /  \
+          (::::)
+         --------
+         
+  
+  - name: Wait for ISE App Server to Come Up ∆ ∆ ∆ | 🕑 ~25m
+    delegate_to: localhost
+    when: ise_restore_task_id is defined
+    ansible.builtin.wait_for:
+      host: "{{ upg_span }}"
+      port: 443 # GUI / REST / API Gateway
+      state: started # [started (default)|stopped|present|absent|drained]
+      sleep: 10 # Seconds to sleep between checks; Default: 1
+      timeout: "{{ 60 * 60 }}" # 3600s == 1 hour # Default: 300. Stop checking after <seconds>
+    ignore_errors: true # Errors do not stop execution
+  
+  - name: Wait for ISE Application Server GUI Login Screen | 🕑 ~20m
+    delegate_to: localhost
+    when: ise_restore_task_id is defined
+    ansible.builtin.uri:
+      url: https://vmware-sadmin.securitydemo.net/admin/login.jsp
+      method: GET
+      follow_redirects: safe
+      timeout: 10
+      validate_certs: no
+      return_content: no
+    register: ise_login_info
+    until: ise_login_info.status == 200
+    delay: 10 # Seconds to delay between retries in `until` loop; Default: 0
+    retries: 125 # Stop after N retries in `until` loop
+
+  - name: Install 3.2 Patch 3 on vmware-sadmin
+    delegate_to: localhost
+    ansible.builtin.uri:
+      url: "https://vmware-sadmin.securitydemo.net/api/v1/patch/install"
+      method: POST
+      url_username: "{{ ise_username }}"
+      url_password: "{{ ise_init_password }}"
+      force_basic_auth: yes
+      body: |
+        { 
+          "isDirectoryListed": "true",
+          "patchName": "ise-patchbundle-3.2.0.542-Patch3-23071904.SPA.x86_64.tar.gz",
+          "repositoryName": "FTP"
+        }
+      status_code: [
+                    200,  # OK
+                    202,  # Patch installation triggered successfully
+                    400,  # Invalid input. A valid patch name and repository name should be provided as query parameters
+                    500,  # Internal server error
+                    ]
+      body_format: json
+      validate_certs: "{{ ise_verify }}"
+      return_content: true
+      timeout: 600 # in seconds (10 minutes)
+    register: response
+    failed_when: (response.status != 202) and (response.status != 500)
+
+  - name: Patch Installation Initialized
+    ansible.builtin.debug:
+      msg: |
+        {{bar}}          EEE,,,EEE
+        {{bar}}    ,E,,EEEEEEEEEEE,,E,
+        {{bar}}    ]EEEE^       `]EEEE
+        {{bar}}  ,,EEE      ]EEE   ]EE,,
+        {{bar}} ]EEEE        `EEE,  ]EEEE     Patch installation has been initiated
+        {{bar}}   EEE  EE,    ,EEE   EEE
+        {{bar}} ~EEEE  ]EEE,EEEEEE   *E       Be patient as the patch installs and the
+        {{bar}} ]E*EE,   ]EEEEEEEEEE,         ISE nodes restart
+        {{bar}}    ]EEE,       *EEEEEE,
+        {{bar}}   ]EEEEEEEEEE,  *EEEEE
+        {{bar}}         ]EE***`    `^`
+
+  - name: 🛑 Pause for 3 Minutes to Upload Patch and Start Installation 🛑
+    ansible.builtin.pause:
+      seconds: 180

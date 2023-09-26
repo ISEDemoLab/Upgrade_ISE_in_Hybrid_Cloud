@@ -22,34 +22,34 @@
 # - ise_backup_filename
 #------------------------------------------------------------------------------
 
-  - name: Role Assertions
-    ansible.builtin.assert:
-      that:
-        - ise_repository_name is defined
-        - ise_repository_name != ''
-        - ise_backup_encryption_key is defined
-        - ise_backup_encryption_key != ''
-    register: role_assertions
+    - name: Role Assertions
+      ansible.builtin.assert:
+        that:
+          - ise_repository_name is defined
+          - ise_repository_name != ''
+          - ise_backup_encryption_key is defined
+          - ise_backup_encryption_key != ''
+      register: role_assertions
 
 #------------------------------------------------------------------------------
 # Backup the ISE Configuration Database
 #------------------------------------------------------------------------------
-  - name: ISE Configuration Backup Now
-    when: role_assertions.failed == false
-    block:
-  
-      - name: ISE Configuration Backup Now | {{ ise_backup_name_prefix }} ⮕ {{ ise_repository_name }}
-        cisco.ise.backup_config:
-          ise_hostname: "{{ upg_ppan }}"
-          ise_username: "{{ ise_username | default( omit ) }}"
-          ise_password: "{{ ise_password | default( omit ) }}"
-          repositoryName: "{{ ise_repository_name }}"
-          backupName: "{{ ise_backup_name_prefix }}"
-          backupEncryptionKey: "{{ ise_backup_encryption_key }}"
-        register: backup_config_info
-        failed_when: "'initiated' not in backup_config_info.ise_response.response.message"
-        ignore_errors: true # If we already initiated a backup, keep going!
-  
+    - name: ISE Configuration Backup Now
+      when: role_assertions.failed == false
+      block:
+    
+        - name: ISE Configuration Backup Now | {{ ise_backup_name_prefix }} ⮕ {{ ise_repository_name }}
+          cisco.ise.backup_config:
+            ise_hostname: "{{ upg_ppan }}"
+            ise_username: "{{ ise_username | default( omit ) }}"
+            ise_password: "{{ ise_password | default( omit ) }}"
+            repositoryName: "{{ ise_repository_name }}"
+            backupName: "{{ ise_backup_name_prefix }}"
+            backupEncryptionKey: "{{ ise_backup_encryption_key }}"
+          register: backup_config_info
+          failed_when: "'initiated' not in backup_config_info.ise_response.response.message"
+          ignore_errors: true # If we already initiated a backup, keep going!
+    
         # Example Backup Status:
         # ```
         # backup_config_info:
@@ -63,43 +63,43 @@
         #     version: 1.0.0
         # ```
   
-      - name: ISE Configuration Backup Failed
-        when: backup_config_info.failed
-        ansible.builtin.fail:
-          msg: |
-            '{{ ise_backup_name_prefix }}' @ {{ upg_ppan }} ⮕ {{ ise_repository_name }}
-            {{ backup_config_info }}
-  
-      - name: ISE Backup Banner
-        when: 
-          - backup_config_info is defined
-          - backup_config_info.ise_response.response.id is defined
-        ansible.builtin.pause:
-          seconds: 0
-          prompt: |
-             
-             
-                ISE Backup Started - This will take at least 10 minutes!
-              ________   
-               (    )    Node: {{ upg_ppan }} 
-                \../     Repo: {{ ise_repository_name }}
-                 )(      Started: {{ '%Y%m%dT%H%M%S-%Z' | strftime }}
-                /  \     Task ID: {{ backup_config_info.ise_response.response.id }}
-               (::::)    Text: {{ backup_config_info.ise_response.response.message }}
-              --------   
-             
-             
-  
-      - name: ISE Backup '{{ ise_backup_name_prefix }}' In Progress | 🕑 ~10m
-        cisco.ise.backup_last_status_info:
-          ise_hostname: "{{ upg_ppan }}"
-          ise_username: "{{ ise_username }}"
-          ise_password: "{{ ise_password }}"
-        delay: 10 # seconds to wait between retries
-        retries: 360 # 360 * 10 seconds = 3600s == 1 hour
-        register: ise_backup_status
-        until: ise_backup_status.ise_response.status != 'IN_PROGRESS'
-        failed_when: ise_backup_status.ise_response.justComplete != 'yes'
+        - name: ISE Configuration Backup Failed
+          when: backup_config_info.failed
+          ansible.builtin.fail:
+            msg: |
+              '{{ ise_backup_name_prefix }}' @ {{ upg_ppan }} ⮕ {{ ise_repository_name }}
+              {{ backup_config_info }}
+    
+        - name: ISE Backup Banner
+          when: 
+            - backup_config_info is defined
+            - backup_config_info.ise_response.response.id is defined
+          ansible.builtin.pause:
+            seconds: 0
+            prompt: |
+               
+               
+                  ISE Backup Started - This will take at least 10 minutes!
+                ________   
+                 (    )  Node: {{ upg_ppan }} 
+                  \../   Repo: {{ ise_repository_name }}
+                   )(    Started: {{ '%Y%m%dT%H%M%S-%Z' | strftime }}
+                  /  \   Task ID: {{ backup_config_info.ise_response.response.id }}
+                 (::::)  Text: {{ backup_config_info.ise_response.response.message }}
+                --------   
+               
+               
+    
+        - name: ISE Backup '{{ ise_backup_name_prefix }}' In Progress | 🕑 ~10m
+          cisco.ise.backup_last_status_info:
+            ise_hostname: "{{ upg_ppan }}"
+            ise_username: "{{ ise_username }}"
+            ise_password: "{{ ise_password }}"
+          delay: 10 # seconds to wait between retries
+          retries: 360 # 360 * 10 seconds = 3600s == 1 hour
+          register: ise_backup_status
+          until: ise_backup_status.ise_response.status != 'IN_PROGRESS'
+          failed_when: ise_backup_status.ise_response.justComplete != 'yes'
   
         #----------------------------------------------------------------------------
         # Example ise_backup_status Results
@@ -195,67 +195,67 @@
         #     type: CONFIGURATION_DB
         # ```
   
-      - name: Show `ise_backup_status` on Failure
-        when:
-          - ise_backup_status is defined
-          - ise_backup_status.failed
-        ansible.builtin.debug:
-          var: ise_backup_status
-        ignore_errors: true
-  
-      - name: Set `ise_backup_filename` and `ise_restore_filename`
-        when: 
-          - ise_backup_status is defined
-          - ise_backup_status.failed == false
-          - ise_backup_status.ise_response is defined
-          - ise_backup_status.ise_response.message is defined
-        ansible.builtin.set_fact:
-          ise_backup_filename: "{{ ise_backup_status.ise_response.message.split(' ')[1] }}"
-          ise_restore_filename: "{{ ise_backup_status.ise_response.message.split(' ')[1] }}"
-        ignore_errors: true
-  
-      - name: ISE Configuration Backup Status | {{ ise_backup_name_prefix }}
-        ansible.builtin.pause:
-          seconds: 30 # 💡 Pause and allow for the ISE Backup & Restore screen to update
-          prompt: |
-             
-                    .          
-                   /|\          Node: {{ upg_ppan }}
-               @  /|||\  @      Repo: {{ ise_backup_status.ise_response.repository }}
-              @  /|||||\  @     Type: {{ ise_backup_status.ise_response.type }}
-              @  \|/ \|/  @     Fail: {{ ise_backup_status.failed }}
-               @.       .@      Text: {{ ise_backup_status.ise_response.message }}
-                `Y@ @ @Y`       File: {{ ise_backup_filename | default('None') }}
-                              
-               Wait 30 seconds for ISE Backup & Restore process to finish ...
-             
-        ignore_errors: true
-  
-      - name: Configuration Backup has Completed Successfully
-        ansible.builtin.debug:
-          msg: |
-              ' ____                _              _  _   _         _ '
-              '| __ )   __ _   ___ | | __ ___   __| || | | | _ __  | |'
-              '|  _ \  / _` | / __|| |/ // _ \ / _` || | | || `_ \ | |'
-              '| |_) || (_| || (__ |   <|  __/| (_| || |_| || |_) ||_|'
-              '|____/  \__,_| \___||_|\_\\___| \__,_| \___/ | .__/ (_)'
-              '                                             |_|       '
-              {{ inventory_hostname }} is Backed Up to {{ ise_repository_name }} ⮕ {{ ise_backup_filename }}
+        - name: Show `ise_backup_status` on Failure
+          when:
+            - ise_backup_status is defined
+            - ise_backup_status.failed
+          ansible.builtin.debug:
+            var: ise_backup_status
+          ignore_errors: true
+    
+        - name: Set `ise_backup_filename` and `ise_restore_filename`
+          when: 
+            - ise_backup_status is defined
+            - ise_backup_status.failed == false
+            - ise_backup_status.ise_response is defined
+            - ise_backup_status.ise_response.message is defined
+          ansible.builtin.set_fact:
+            ise_backup_filename: "{{ ise_backup_status.ise_response.message.split(' ')[1] }}"
+            ise_restore_filename: "{{ ise_backup_status.ise_response.message.split(' ')[1] }}"
+          ignore_errors: true
+    
+        - name: ISE Configuration Backup Status | {{ ise_backup_name_prefix }}
+          ansible.builtin.pause:
+            seconds: 30 # 💡 Pause and allow for the ISE Backup & Restore screen to update
+            prompt: |
+               
+                      .          
+                     /|\          Node: {{ upg_ppan }}
+                 @  /|||\  @      Repo: {{ ise_backup_status.ise_response.repository }}
+                @  /|||||\  @     Type: {{ ise_backup_status.ise_response.type }}
+                @  \|/ \|/  @     Fail: {{ ise_backup_status.failed }}
+                 @.       .@      Text: {{ ise_backup_status.ise_response.message }}
+                  `Y@ @ @Y`       File: {{ ise_backup_filename | default('None') }}
+                                
+                 Wait 30 seconds for ISE Backup & Restore process to finish ...
+               
+          ignore_errors: true
+    
+        - name: Configuration Backup has Completed Successfully
+          ansible.builtin.debug:
+            msg: |
+                ' ____                _              _  _   _         _ '
+                '| __ )   __ _   ___ | | __ ___   __| || | | | _ __  | |'
+                '|  _ \  / _` | / __|| |/ // _ \ / _` || | | || `_ \ | |'
+                '| |_) || (_| || (__ |   <|  __/| (_| || |_| || |_) ||_|'
+                '|____/  \__,_| \___||_|\_\\___| \__,_| \___/ | .__/ (_)'
+                '                                             |_|       '
+                {{ inventory_hostname }} is Backed Up to {{ ise_repository_name }} ⮕ {{ ise_backup_filename }}
 
 #------------------------------------------------------------------------------
 # Perform the ISE Restore
 #------------------------------------------------------------------------------
 
-  - name: Role Assertions
-    ansible.builtin.assert:
-      that:
-        - ise_repository_name is defined
-        - ise_repository_name != ''
-        - ise_backup_encryption_key is defined
-        - ise_backup_encryption_key != ''
-        - ise_restore_filename is defined
-        - ise_restore_filename != ''
-    register: role_assertions
+    - name: Role Assertions
+      ansible.builtin.assert:
+        that:
+          - ise_repository_name is defined
+          - ise_repository_name != ''
+          - ise_backup_encryption_key is defined
+          - ise_backup_encryption_key != ''
+          - ise_restore_filename is defined
+          - ise_restore_filename != ''
+      register: role_assertions
 
   #------------------------------------------------------------------------------
   # Triggers a configuration DB restore job on the ISE node. 
@@ -263,35 +263,35 @@
   # Use the cisco.ise.tasks_info module to get the status of the restore job.
   # Unclear from the restore API what exactly is done before the status is returned.
   #------------------------------------------------------------------------------
-  - name: Restore ISE Configuration | {{ ise_restore_filename }}
-    delegate_to: localhost
-    ansible.builtin.uri:
-      url: "https://vmware-sadmin.securitydemo.net/api/v1/backup-restore/config/restore"
-      method: POST
-      url_username: "{{ ise_username }}"
-      url_password: "{{ ise_init_password }}"
-      validate_certs: "{{ ise_verify }}"
-      force_basic_auth: yes
-      force: true # do not get a cached copy
-      follow_redirects: safe
-      body_format: json
-      body: |
-        {
-          "repositoryName": "{{ ise_repository_name }}",
-          "backupEncryptionKey": "{{ ise_backup_encryption_key }}",
-          "restoreFile": "{{ ise_restore_filename }}",
-          "restoreIncludeAdeos": "{{ ise_restore_adeos }}"
-        }
-      status_code: [
-          202, # Config DB restore task initiated
-          400, # Invalid Input: Invalid repository name, etc.
-          401, # Unauthorized
-          405, # A backup or restore is already in progress
-        ]
-      timeout: 600 # in seconds (10 minutes)
-      return_content: true
-    register: ise_restore_status
-    failed_when: ise_restore_status.status != 202
+    - name: Restore ISE Configuration | {{ ise_restore_filename }}
+      delegate_to: localhost
+      ansible.builtin.uri:
+        url: "https://vmware-sadmin.securitydemo.net/api/v1/backup-restore/config/restore"
+        method: POST
+        url_username: "{{ ise_username }}"
+        url_password: "{{ ise_init_password }}"
+        validate_certs: "{{ ise_verify }}"
+        force_basic_auth: yes
+        force: true # do not get a cached copy
+        follow_redirects: safe
+        body_format: json
+        body: |
+          {
+            "repositoryName": "{{ ise_repository_name }}",
+            "backupEncryptionKey": "{{ ise_backup_encryption_key }}",
+            "restoreFile": "{{ ise_restore_filename }}",
+            "restoreIncludeAdeos": "{{ ise_restore_adeos }}"
+          }
+        status_code: [
+            202, # Config DB restore task initiated
+            400, # Invalid Input: Invalid repository name, etc.
+            401, # Unauthorized
+            405, # A backup or restore is already in progress
+          ]
+        timeout: 600 # in seconds (10 minutes)
+        return_content: true
+      register: ise_restore_status
+      failed_when: ise_restore_status.status != 202
     # ignore_errors: true # Errors do not stop execution
   
     # Example ise_restore_status Results
@@ -305,155 +305,83 @@
     #   status: 202
     # ```
   
-  - name: Show `ise_restore_status`
-    when: ise_restore_status is defined
-    ansible.builtin.debug:
-      var: ise_restore_status
-      verbosity: 0
-  
-  - name: Set ISE Restore Task ID | {{ ise_restore_status.json.response.id }}
-    when: 
-      - ise_restore_status is defined
-      - ise_restore_status.failed == false
-    ansible.builtin.set_fact:
-      ise_restore_task_id: "{{ ise_restore_status.json.response.id }}"
-  
-  # - name: ISE Restore Task Status | {{ ise_restore_task_id }}
-  #   when: 
-  #     - ise_restore_task_id is defined
-  #   cisco.ise.tasks_info:
-  #     ise_hostname: "{{ upg_span }}"
-  #     ise_username: "{{ ise_username }}"
-  #     ise_password: "{{ ise_init_password }}"
-  #     validate_certs: "{{ ise_verify }}"
-  #     taskId: "{{ ise_restore_status.json.response.id }}"
-  #   register: ise_restore_progress
-  #   # until: ise_restore_progress.ise_response.failCount != None or ise_restore_progress.ise_response.successCount != None
-  #   # delay: 10 # Seconds to delay between retries in `until` loop; Default: 0
-  #   # retries: 60 # Stop after N retries in `until` loop
-  #   ignore_errors: true
-  
-  - name: ISE Restore Task Status | {{ ise_restore_task_id }}
-    delegate_to: localhost
-    ansible.builtin.uri:
-      url: "https://vmware-sadmin.securitydemo.net/api/v1/task/{{ ise_restore_task_id }}"
-      method: GET
-      url_username: "{{ ise_username }}"
-      url_password: "{{ ise_init_password }}"
-      validate_certs: "{{ ise_verify }}"
-      force_basic_auth: yes
-      force: true # do not get a cached copy
-      follow_redirects: safe
-      # body_format: json
-      # body: |
-      #   {
-      #     "detailStatus": [
-      #       {}
-      #     ],
-      #     "executionStatus": "string",
-      #     "failCount": 0,
-      #     "id": "{{ ise_restore_task_id }}",
-      #     "moduleType": "string",
-      #     "resourcesCount": 0,
-      #     "startTime": "string",
-      #     "successCount": 0
-      #   }
-      status_code: [
-          200, # Success
-          401, # Unauthorized
-        ]
-      timeout: 600 # in seconds (10 minutes)
-      return_content: true
-    register: ise_restore_progress
-    failed_when: ise_restore_status.status != 202
-    ignore_errors: true # Errors do not stop execution
-
-    # Example `ise_restore_progress` Results
-    # ```
-    # ise_response:
-    #   detailStatus:
-    #   - ' '
-    #   executionStatus: IN_PROGRESS
-    #   failCount: null
-    #   id: f4f6d6a0-2f0a-11ee-ac12-2273676164ee
-    #   moduleType: CONFIG BACKUP RESTORE MODULE
-    #   resourcesCount: 1
-    #   startTime: '1690743460106'
-    #   successCount: null
-    # ```
-  
-  - name: Show `ise_restore_progress`
-    when: 
-      - ise_restore_progress is defined
-    ansible.builtin.debug:
-      msg: |
-        ise_restore_progress: {{ ise_restore_progress }}
-      verbosity: 1
-  
-  - name: Wait for ISE App Server Going Down ∇ ∇ ∇ Banner
-    when: ise_restore_task_id is defined
-    ansible.builtin.debug:
-      msg: |
-         
-         ________
-          (    )
-           \../
-            )(     Wait ~5 minutes for ISE AppServer To Go Down  ∇ ∇ ∇ 
-           /  \
-          (::::)
-         --------
-         
-  
-  - name: Wait for ISE App Server to Go Down ∇ ∇ ∇ | 🕑 ~3-5m
-    delegate_to: localhost
-    when: ise_restore_task_id is defined
-    ansible.builtin.wait_for:
-      host: "{{ upg_span }}"
-      port: 443 # GUI / REST / API Gateway
-      state: stopped # Port is CLOSED [started (default)|stopped|present|absent|drained]
-      sleep: 10 # Seconds to sleep between checks; Default: 1
-      timeout: "{{ 60 * 60 }}" # 3600s == 1 hour # Default: 300. Stop checking after <seconds>
-    ignore_errors: true # Errors do not stop execution
-  
-  - name: Wait for ISE App Server to Come Up ∆ ∆ ∆ Banner
-    when: ise_restore_task_id is defined
-    ansible.builtin.debug:
-      msg: |
-         
-         ________
-          (    )
-           \../
-            )(     Wait ~25 minutes for ISE App Server To Come Up ∆ ∆ ∆
-           /  \
-          (::::)
-         --------
-         
-  
-  - name: Wait for ISE App Server to Come Up ∆ ∆ ∆ | 🕑 ~25m
-    delegate_to: localhost
-    when: ise_restore_task_id is defined
-    ansible.builtin.wait_for:
-      host: "{{ upg_span }}"
-      port: 443 # GUI / REST / API Gateway
-      state: started # [started (default)|stopped|present|absent|drained]
-      sleep: 10 # Seconds to sleep between checks; Default: 1
-      timeout: "{{ 60 * 60 }}" # 3600s == 1 hour # Default: 300. Stop checking after <seconds>
-    ignore_errors: true # Errors do not stop execution
-  
-  - name: Wait for ISE Application Server GUI Login Screen | 🕑 ~20m
-    delegate_to: localhost
-    when: ise_restore_task_id is defined
-    ansible.builtin.uri:
-      url: https://vmware-sadmin.securitydemo.net/admin/login.jsp
-      method: GET
-      follow_redirects: safe
-      timeout: 10
-      validate_certs: no
-      return_content: no
-    register: ise_login_info
-    until: ise_login_info.status == 200
-    delay: 10 # Seconds to delay between retries in `until` loop; Default: 0
-    retries: 125 # Stop after N retries in `until` loop
+    - name: Show `ise_restore_status`
+      when: ise_restore_status is defined
+      ansible.builtin.debug:
+        var: ise_restore_status
+        verbosity: 0
+    
+    - name: Set ISE Restore Task ID | {{ ise_restore_status.json.response.id }}
+      when: 
+        - ise_restore_status is defined
+        - ise_restore_status.failed == false
+      ansible.builtin.set_fact:
+        ise_restore_task_id: "{{ ise_restore_status.json.response.id }}"
+    
+    - name: Wait for ISE App Server Going Down ∇ ∇ ∇ Banner
+      when: ise_restore_task_id is defined
+      ansible.builtin.debug:
+        msg: |
+           
+           ________
+            (    )
+             \../
+              )(     Wait ~5 minutes for ISE AppServer To Go Down  ∇ ∇ ∇ 
+             /  \
+            (::::)
+           --------
+           
+    
+    - name: Wait for ISE App Server to Go Down ∇ ∇ ∇ | 🕑 ~3-5m
+      delegate_to: localhost
+      when: ise_restore_task_id is defined
+      ansible.builtin.wait_for:
+        host: "{{ upg_span }}"
+        port: 443 # GUI / REST / API Gateway
+        state: stopped # Port is CLOSED [started (default)|stopped|present|absent|drained]
+        sleep: 10 # Seconds to sleep between checks; Default: 1
+        timeout: "{{ 60 * 60 }}" # 3600s == 1 hour # Default: 300. Stop checking after <seconds>
+      ignore_errors: true # Errors do not stop execution
+    
+    - name: Wait for ISE App Server to Come Up ∆ ∆ ∆ Banner
+      when: ise_restore_task_id is defined
+      ansible.builtin.debug:
+        msg: |
+           
+           ________
+            (    )
+             \../
+              )(     Wait ~25 minutes for ISE App Server To Come Up ∆ ∆ ∆
+             /  \
+            (::::)
+           --------
+           
+    
+    - name: Wait for ISE App Server to Come Up ∆ ∆ ∆ | 🕑 ~25m
+      delegate_to: localhost
+      when: ise_restore_task_id is defined
+      ansible.builtin.wait_for:
+        host: "{{ upg_span }}"
+        port: 443 # GUI / REST / API Gateway
+        state: started # [started (default)|stopped|present|absent|drained]
+        sleep: 10 # Seconds to sleep between checks; Default: 1
+        timeout: "{{ 60 * 60 }}" # 3600s == 1 hour # Default: 300. Stop checking after <seconds>
+      ignore_errors: true # Errors do not stop execution
+    
+    - name: Wait for ISE Application Server GUI Login Screen | 🕑 ~20m
+      delegate_to: localhost
+      when: ise_restore_task_id is defined
+      ansible.builtin.uri:
+        url: https://vmware-sadmin.securitydemo.net/admin/login.jsp
+        method: GET
+        follow_redirects: safe
+        timeout: 10
+        validate_certs: no
+        return_content: no
+      register: ise_login_info
+      until: ise_login_info.status == 200
+      delay: 10 # Seconds to delay between retries in `until` loop; Default: 0
+      retries: 125 # Stop after N retries in `until` loop
   
     # Example `ise_login_info` Results
     # ```
@@ -467,19 +395,19 @@
   # 💡 Use timeout:300 to prevent this failure:
   # The cisco.ise.tasks_info action failed to execute in the expected time frame (30) and was terminated
   #------------------------------------------------------------------------------
-  - name: ISE Restore Task Status | {{ ise_restore_task_id }} | 🕑 ~3m
-    when: ise_restore_task_id is defined
-    cisco.ise.tasks_info:
-      ise_hostname: "{{ upg_span }}"
-      ise_username: "{{ ise_username }}"
-      ise_password: "{{ ise_password }}"
-      ise_verify: "{{ ise_verify }}"
-      taskId: "{{ ise_restore_task_id }}"
-    register: ise_restore_task_status
-    until: ise_restore_task_status.ise_response.failCount != None or ise_restore_task_status.ise_response.successCount != None
-    delay: 10 # Seconds to delay between retries in `until` loop; Default: 0
-    retries: 240 # Stop after N retries in `until` loop
-    ignore_errors: true
+    - name: Restore Task Status | {{ ise_restore_task_id }} | 🕑 ~3m
+      when: ise_restore_task_id is defined
+      cisco.ise.tasks_info:
+        ise_hostname: "{{ upg_span }}"
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        taskId: "{{ ise_restore_task_id }}"
+      register: ise_restore_task_status
+      until: ise_restore_task_status.ise_response.failCount != None or ise_restore_task_status.ise_response.successCount != None
+      delay: 10 # Seconds to delay between retries in `until` loop; Default: 0
+      retries: 240 # Stop after N retries in `until` loop
+      ignore_errors: true
   
     # Example `ise_restore_task_status` Results:
     # ```
@@ -499,26 +427,26 @@
     #     successCount: null
     # ```
   
-  - name: Send Email Notification
-    ansible.builtin.shell:
-      cmd: "ssmtp charlie@isedemolab.com < ../notifications/33_restored.txt"
+    - name: Send Email Notification
+      ansible.builtin.shell:
+        cmd: "ssmtp charlie@isedemolab.com < ../notifications/33_restored.txt"
 
-  - name: "{{ upg_span }} is now upgraded to version 3.3! 🤍"
-    ansible.builtin.debug:
-      msg: |
-         ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣶
-         ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⣯⣿
-         ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⣯⣯⣯⣿
-         ⠀⠀⠀⠀⠀⠀⠀⢀⣤⡶⠀⠀⠀⢠⣿⣯⣯⣯⣯⣯⣿⠀⠀⠀⠀⢴⣤
-         ⠀⠀⠀⠀⠀⢀⣴⠟⠀⠀⠀⠀⢠⣿⣯⣯⣯⣯⣯⣯⣯⣿⠀⠀⠀⠀⠈⢻⣦
-         ⠀⠀⠀⠀⢠⣿⠁⠀⠀⠀⠀⢀⣿⣯⣯⣯⣯⣯⣯⣯⣯⣯⣿⠀⠀⠀⠀⠀⠈⣿⡀
-         ⠀⠀⠀⢠⣿⠀⠀⠀⠀⠀⢀⣿⣯⣯⣯⣯⠟⠛⢿⣯⣯⣯⣯⣿⠀⠀⠀⠀⠀⠀⣿
-         ⠀⠀⠀⣿⠁⠀⠀⠀⠀⢀⣿⣯⣯⠛⠁⠀⠀⠀⠀⠀⠉⠛⣿⣯⣿⠀⠀⠀⠀⠀⢸⣧  {{ upg_span }} is now
-         ⠀⠀⠀⣿⠀⠀⠀⠀⠀⠈⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠀⠀⠀⠀⠀⠀⣿
-         ⠀⠀⠀⣿⠀⠀⠀⠀⠀⠀⣶⠀⢀⣴⠶⠒⠶⣤⠀⠀⣶⠶⠶⠶⠶⠀⠀⠀⠀⠀⢀⣿  upgraded to version 3.3!
-         ⠀⠀⠀⢻⣆⠀⠀⠀⠀⠀⣿⠀⠘⣧⣀⠀⠀⠈⠁⠀⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⠏
-         ⠀⠀⠀⠀⢿⣄⠀⠀⠀⠀⣿⠀⠀⠀⠀⠉⠙⢷⡀⠀⣿⠉⠉⠉⠉⠀⠀⠀⠀⣰⡟
-         ⠀⠀⠀⠀⠀⢻⣦⠀⠀⠀⣿⠀⠙⣦⣀⣀⣀⣼⠁⠀⣿⣀⣀⣀⣀⠀⠀⠀⣼⠋
-         ⠀⠀⠀⠀⠀⠀⠈⢿⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⠟
-         ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣦⣄⣀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣶⠟⠉
-         ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠉⠙⠛⠛⠛⠋⠉⠁
+    - name: "{{ upg_span }} is now upgraded to version 3.3! 🤍"
+      ansible.builtin.debug:
+        msg: |
+           ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣶
+           ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⣯⣿
+           ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⣯⣯⣯⣿
+           ⠀⠀⠀⠀⠀⠀⠀⢀⣤⡶⠀⠀⠀⢠⣿⣯⣯⣯⣯⣯⣿⠀⠀⠀⠀⢴⣤
+           ⠀⠀⠀⠀⠀⢀⣴⠟⠀⠀⠀⠀⢠⣿⣯⣯⣯⣯⣯⣯⣯⣿⠀⠀⠀⠀⠈⢻⣦
+           ⠀⠀⠀⠀⢠⣿⠁⠀⠀⠀⠀⢀⣿⣯⣯⣯⣯⣯⣯⣯⣯⣯⣿⠀⠀⠀⠀⠀⠈⣿⡀
+           ⠀⠀⠀⢠⣿⠀⠀⠀⠀⠀⢀⣿⣯⣯⣯⣯⠟⠛⢿⣯⣯⣯⣯⣿⠀⠀⠀⠀⠀⠀⣿
+           ⠀⠀⠀⣿⠁⠀⠀⠀⠀⢀⣿⣯⣯⠛⠁⠀⠀⠀⠀⠀⠉⠛⣿⣯⣿⠀⠀⠀⠀⠀⢸⣧  {{ upg_span }} is now
+           ⠀⠀⠀⣿⠀⠀⠀⠀⠀⠈⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠀⠀⠀⠀⠀⠀⣿
+           ⠀⠀⠀⣿⠀⠀⠀⠀⠀⠀⣶⠀⢀⣴⠶⠒⠶⣤⠀⠀⣶⠶⠶⠶⠶⠀⠀⠀⠀⠀⢀⣿  upgraded to version 3.3!
+           ⠀⠀⠀⢻⣆⠀⠀⠀⠀⠀⣿⠀⠘⣧⣀⠀⠀⠈⠁⠀⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⠏
+           ⠀⠀⠀⠀⢿⣄⠀⠀⠀⠀⣿⠀⠀⠀⠀⠉⠙⢷⡀⠀⣿⠉⠉⠉⠉⠀⠀⠀⠀⣰⡟
+           ⠀⠀⠀⠀⠀⢻⣦⠀⠀⠀⣿⠀⠙⣦⣀⣀⣀⣼⠁⠀⣿⣀⣀⣀⣀⠀⠀⠀⣼⠋
+           ⠀⠀⠀⠀⠀⠀⠈⢿⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⠟
+           ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣦⣄⣀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣶⠟⠉
+           ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠉⠙⠛⠛⠛⠋⠉⠁

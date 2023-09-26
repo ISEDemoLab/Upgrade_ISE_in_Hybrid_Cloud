@@ -8,6 +8,6 @@
 
   tasks:
    
-  - name: 🛑 Pause for 60 seconds to for command to finish 🛑
-    ansible.builtin.pause:
-      seconds: 60
+  # - name: 🛑 Pause for 60 seconds to for command to finish 🛑
+  #   ansible.builtin.pause:
+  #     seconds: 60

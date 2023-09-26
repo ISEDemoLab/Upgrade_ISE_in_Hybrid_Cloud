@@ -26,12 +26,15 @@
 
 - name: Enable APIs on Primary and Secondary Admin Nodes
   ansible.builtin.import_playbook: 06-enable_api.yaml
+  tags: [api]
 
 - name: Enable APIs on Iteration 1 Cloud PSNs
   ansible.builtin.import_playbook: ../iteration_1/09-enable_api.yaml
+  tags: [api]
 
 - name: Enable APIs on Iteration 2 Cloud PSNs
   ansible.builtin.import_playbook: ../iteration_2/09-enable_api.yaml
+  tags: [api]
 
 - name: Configure FTP Repository on Admin Nodes
   ansible.builtin.import_playbook: 07-create_ftp_repository.yaml

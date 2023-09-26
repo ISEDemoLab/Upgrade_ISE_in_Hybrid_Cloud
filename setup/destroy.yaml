@@ -1,6 +1,6 @@
 ---
 # If you want to keep the Admin Nodes in VMware and only destroy
-# the cloud-based nodes, comment out the last item. 
+# the cloud-based nodes, comment out the `Delete Admin Nodes` item. 
 # 
 # If you want to destroy everything, comment out the first two
 # items.  No need to worry about removing the PSNs nicely if

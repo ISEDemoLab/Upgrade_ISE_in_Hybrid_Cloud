@@ -8,74 +8,74 @@
 
   tasks:
 
-  - name: Enable API Gateway on vmware-admin
-    delegate_to: localhost
-    ansible.builtin.uri:
-      url: "https://vmware-sadmin.securitydemo.net/admin/API/apiGateway/update"
-      method: POST
-      url_username: "{{ ise_username }}"
-      url_password: "{{ ise_password }}"
-      force_basic_auth: yes
-      body: [
-        {
-          "hostname": "vmware-sadmin",
-          "isEnabled": "true"
-        },
-        {
-          "hostname": "vmware-admin",
-          "isEnabled": "true"
-         },
-        {
-          "hostname": "azure-psn",
-          "isEnabled": "false"
-        },
-        {
-          "hostname": "azure-psn2",
-          "isEnabled": "false"
-        },
-        {
-          "hostname": "aws-psn",
-          "isEnabled": "false"
-        },
-        {
-          "hostname": "aws-psn2",
-          "isEnabled": "false"
-        },
-        {
-          "hostname": "oci-psn",
-          "isEnabled": "false"
-        },
-        {
-          "hostname": "oci-psn2",
-          "isEnabled": "false"
-        }
-      ]
-      status_code: [
-                    200,  # OK
-                    500,  # Internal server error
-                    ]
-      body_format: json
-      validate_certs: "{{ ise_verify }}"
-      return_content: true
-    register: response
-    failed_when: (response.status != 200) and (response.status != 500)
-    ignore_errors: yes # Errors do not stop execution
+    - name: Enable API Gateway on vmware-admin
+      delegate_to: localhost
+      ansible.builtin.uri:
+        url: "https://vmware-sadmin.securitydemo.net/admin/API/apiGateway/update"
+        method: POST
+        url_username: "{{ ise_username }}"
+        url_password: "{{ ise_password }}"
+        force_basic_auth: yes
+        body: [
+          {
+            "hostname": "vmware-sadmin",
+            "isEnabled": "true"
+          },
+          {
+            "hostname": "vmware-admin",
+            "isEnabled": "true"
+          },
+          {
+            "hostname": "azure-psn",
+            "isEnabled": "false"
+          },
+          {
+            "hostname": "azure-psn2",
+            "isEnabled": "false"
+          },
+          {
+            "hostname": "aws-psn",
+            "isEnabled": "false"
+          },
+          {
+            "hostname": "aws-psn2",
+            "isEnabled": "false"
+          },
+          {
+            "hostname": "oci-psn",
+            "isEnabled": "false"
+          },
+          {
+            "hostname": "oci-psn2",
+            "isEnabled": "false"
+          }
+        ]
+        status_code: [
+                      200,  # OK
+                      500,  # Internal server error
+                      ]
+        body_format: json
+        validate_certs: "{{ ise_verify }}"
+        return_content: true
+      register: response
+      failed_when: (response.status != 200) and (response.status != 500)
+      ignore_errors: yes # Errors do not stop execution
 
-  - name: 🛑 Pause for30 seconds to allow the API Gateway to enable 🛑
-    ansible.builtin.pause:
-      seconds: 30
+    - name: 🛑 Pause for 30 seconds to allow the API Gateway to enable 🛑
+      ansible.builtin.pause:
+        seconds: 30
 
-  - name: APIs have been enabled 🎉
-    ansible.builtin.debug:
-      msg: |
-        {{bar}}              _______
-        {{bar}}             /       /
-        {{bar}}    ___     /   ____/
-        {{bar}}    \   \  /   /\
-        {{bar}}     \   \/___/  \        API Gateway has been enabled on {{ upg_ppan }}!
-        {{bar}}      \       \   \
-        {{bar}}       \_______\   \
-        {{bar}}               /   /
-        {{bar}}              /   /
-        {{bar}}              \  /
-        {{bar}}               \/
+    - name: APIs have been enabled 🎉
+      ansible.builtin.debug:
+        msg: |
+          {{bar}}              _______
+          {{bar}}             /       /
+          {{bar}}    ___     /   ____/
+          {{bar}}    \   \  /   /\
+          {{bar}}     \   \/___/  \        API Gateway has been enabled on {{ upg_ppan }}!
+          {{bar}}      \       \   \
+          {{bar}}       \_______\   \
+          {{bar}}               /   /
+          {{bar}}              /   /
+          {{bar}}              \  /
+          {{bar}}               \/

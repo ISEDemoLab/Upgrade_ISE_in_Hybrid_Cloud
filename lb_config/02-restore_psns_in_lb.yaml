@@ -13,8 +13,8 @@
   # Restore the original RADIUS configuration in the Load Balancer
   # ------------------------------------------------------------------------
 
-  - name: Copy Configuration to LB disabling `iteration_1` nodes
-    copy:
-      src: traefik/radius.yaml
-      dest: /home/ubuntu/traefik/config/radius.yaml
-      backup: no
+    - name: Copy Configuration to LB disabling `iteration_1` nodes
+      copy:
+        src: traefik/radius.yaml
+        dest: /home/ubuntu/traefik/config/radius.yaml
+        backup: no

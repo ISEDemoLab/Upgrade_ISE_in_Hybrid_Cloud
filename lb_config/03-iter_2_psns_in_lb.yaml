@@ -13,8 +13,8 @@
   # Disable the `iteration_2` PSNs in the Load Balancer
   # ------------------------------------------------------------------------
 
-  - name: Copy Configuration to LB disabling `iteration_2` nodes
-    copy:
-      src: radius_2.yaml
-      dest: /home/ubuntu/traefik/config/radius.yaml
-      backup: no
+    - name: Copy Configuration to LB disabling `iteration_2` nodes
+      copy:
+        src: radius_2.yaml
+        dest: /home/ubuntu/traefik/config/radius.yaml
+        backup: no

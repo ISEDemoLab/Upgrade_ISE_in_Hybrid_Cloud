@@ -73,7 +73,7 @@
   # ⚠ or ZTP-enabled nodes, do that first.
   # ------------------------------------------------------------------------
 
-    - name: Register the Primary MnT and a PSN to the deployment | 🕑 ~120s
+    - name: Register the SPAN and PSNs to the deployment | 🕑 ~8m
       cisco.ise.personas_register_node:
         primary_ip: "10.1.100.40"
         primary_username: "{{ ise_username }}"
@@ -94,8 +94,37 @@
           services:
             - Session
             - Profiler
+        - fqdn: "oci-psn.securitydemo.net"
+          roles: []
+          services:
+            - Session
+            - Profiler
+            - pxGrid
+        - fqdn: "aws-psn.securitydemo.net"
+          roles: []
+          services:
+            - Session
+            - Profiler
+            - DeviceAdmin
+        - fqdn: "azure-psn2.securitydemo.net"
+          roles: []
+          services: 
+            - Session
+            - Profiler
+        - fqdn: "oci-psn2.securitydemo.net"
+          roles: []
+          services:
+            - Session
+            - Profiler
+            - pxGrid
+        - fqdn: "aws-psn2.securitydemo.net"
+          roles: []
+          services:
+            - Session
+            - Profiler
+            - DeviceAdmin
 
-    - name: Wait for MnT & PSN to sync to deployment database
+    - name: Wait for nodes to sync to deployment database
       ansible.builtin.debug:
         msg: |
            
@@ -107,7 +136,7 @@
             (::::)
            --------
 
-    - name: Wait for ISE Node Synchronization ⏳ | 🕑 ~17m
+    - name: Wait for ISE Node Synchronization ⏳ | 🕑 ~20m
       cisco.ise.node_deployment_info:
         ise_hostname: "{{ upg_ppan }}" # PPAN!
         ise_username: "{{ ise_username }}"
@@ -128,7 +157,7 @@
   # of roles and services will fail.
   # ------------------------------------------------------------------------
 
-    - name: Update Roles and Services for the PPAN | {{ upg_ppan }}
+    - name: Remove all `services` from the PPAN | {{ upg_ppan }}
       cisco.ise.personas_update_roles_services:
         ip: 10.1.100.40 # PPAN!
         ise_verify: "{{ ise_verify }}"
@@ -170,46 +199,46 @@
       retries: "1000"
       delay: "10" # wait between checks
 
-    - name: Register the Cloud-based PSNs to the deployment | 🕑 ~5m
-      cisco.ise.personas_register_node:
-        primary_ip: "10.1.100.40"
-        primary_username: "{{ ise_username }}"
-        primary_password: "{{ ise_init_password }}"
-        fqdn: "{{ item.fqdn }}"
-        username: "{{ ise_username }}"
-        password: "{{ ise_init_password }}"
-        roles: "{{ item.roles }}"
-        services: "{{ item.services }}"
-      loop:
-        - fqdn: "oci-psn.securitydemo.net"
-          roles: []
-          services:
-            - Session
-            - Profiler
-            - pxGrid
-        - fqdn: "aws-psn.securitydemo.net"
-          roles: []
-          services:
-            - Session
-            - Profiler
-            - DeviceAdmin
-        - fqdn: "azure-psn2.securitydemo.net"
-          roles: []
-          services: 
-            - Session
-            - Profiler
-        - fqdn: "oci-psn2.securitydemo.net"
-          roles: []
-          services:
-            - Session
-            - Profiler
-            - pxGrid
-        - fqdn: "aws-psn2.securitydemo.net"
-          roles: []
-          services:
-            - Session
-            - Profiler
-            - DeviceAdmin
+    # - name: Register the Cloud-based PSNs to the deployment | 🕑 ~5m
+    #   cisco.ise.personas_register_node:
+    #     primary_ip: "10.1.100.40"
+    #     primary_username: "{{ ise_username }}"
+    #     primary_password: "{{ ise_init_password }}"
+    #     fqdn: "{{ item.fqdn }}"
+    #     username: "{{ ise_username }}"
+    #     password: "{{ ise_init_password }}"
+    #     roles: "{{ item.roles }}"
+    #     services: "{{ item.services }}"
+    #   loop:
+    #     - fqdn: "oci-psn.securitydemo.net"
+    #       roles: []
+    #       services:
+    #         - Session
+    #         - Profiler
+    #         - pxGrid
+    #     - fqdn: "aws-psn.securitydemo.net"
+    #       roles: []
+    #       services:
+    #         - Session
+    #         - Profiler
+    #         - DeviceAdmin
+    #     - fqdn: "azure-psn2.securitydemo.net"
+    #       roles: []
+    #       services: 
+    #         - Session
+    #         - Profiler
+    #     - fqdn: "oci-psn2.securitydemo.net"
+    #       roles: []
+    #       services:
+    #         - Session
+    #         - Profiler
+    #         - pxGrid
+    #     - fqdn: "aws-psn2.securitydemo.net"
+    #       roles: []
+    #       services:
+    #         - Session
+    #         - Profiler
+    #         - DeviceAdmin
 
     - name: Create Node Group 'WestUS'
       cisco.ise.node_group:
@@ -306,27 +335,27 @@
   # have the status `Connected`, the task completes.
   # ------------------------------------------------------------------------
 
-    - name: Wait for PSNs to sync to deployment database ⏳
-      ansible.builtin.debug:
-        msg: |
-           
-           ________
-            (    )
-             \../
-              )(     Wait ~20 minutes for Node Sync
-             /  \    
-            (::::)
-           --------
+    # - name: Wait for PSNs to sync to deployment database ⏳
+    #   ansible.builtin.debug:
+    #     msg: |
+    #        
+    #        ________
+    #         (    )
+    #          \../
+    #           )(     Wait ~20 minutes for Node Sync
+    #          /  \    
+    #         (::::)
+    #        --------
 
-    - name: Wait for ISE Node Synchronization | 🕑 ~18m
-      cisco.ise.node_deployment_info:
-        ise_hostname: "{{ upg_ppan }}" # PPAN!
-        ise_username: "{{ ise_username }}"
-        ise_password: "{{ ise_init_password }}"
-        ise_verify: "{{ ise_verify }}"
-        ise_debug: "{{ ise_debug }}"
-      register: node_deployment_info
-      until: node_deployment_info.ise_response | selectattr('nodeStatus', '!=', 'Connected') | count == 0
-      delay: 30 # Default: 0. Seconds to delay between retries
-      retries: 240
-      timeout: 3600 # retries * delay. Default: 300. Stop checking after <seconds>
+    # - name: Wait for ISE Node Synchronization | 🕑 ~18m
+    #   cisco.ise.node_deployment_info:
+    #     ise_hostname: "{{ upg_ppan }}" # PPAN!
+    #     ise_username: "{{ ise_username }}"
+    #     ise_password: "{{ ise_init_password }}"
+    #     ise_verify: "{{ ise_verify }}"
+    #     ise_debug: "{{ ise_debug }}"
+    #   register: node_deployment_info
+    #   until: node_deployment_info.ise_response | selectattr('nodeStatus', '!=', 'Connected') | count == 0
+    #   delay: 30 # Default: 0. Seconds to delay between retries
+    #   retries: 240
+    #   timeout: 3600 # retries * delay. Default: 300. Stop checking after <seconds>

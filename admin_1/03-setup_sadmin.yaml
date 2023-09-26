@@ -11,7 +11,6 @@
 # This playbook will Deploy ISE to an ESXi Host, attach the ztp.iso, and
 # power on the VM
 #--------------------------------------------------------------------------
-
   tasks:
 
     #--------------------------------------------------------------------------
@@ -30,78 +29,37 @@
     #   - medium
     #--------------------------------------------------------------------------
 
-    # - name: Deploy OVA to ESXi Server to be the Primary Admin Node (3.3) ⏳ | 🕑 ~17m
-    #   community.vmware.vmware_deploy_ovf:
-    #     datastore: '{{ datastore }}'
-    #     name: vmware-sadmin
-    #     networks: "{u'VM Network':u'{{ ProvisioningNetworkLabel }}'}"
-    #     power_on: no
-    #     ovf: "{{ ise33_ovf }}"
-    #     wait_for_ip_address: true
-    #     validate_certs: no
-    #     properties:
-    #       DeploymentOption.value: 'medium' # For this OVA, the values are Eval, PSN_Lite, small, medium
-    #   delegate_to: localhost
+    - name: Deploy {{ upg_span }} version 3.3 on ESXi ⏳ | 🕑 ~17m
+      community.vmware.vmware_deploy_ovf:
+        datastore: '{{ datastore }}'
+        name: vmware-sadmin
+        networks: "{u'VM Network':u'{{ ProvisioningNetworkLabel }}'}"
+        power_on: no
+        ovf: "{{ ise33_ovf }}"
+        wait_for_ip_address: true
+        validate_certs: no
+        properties:
+          DeploymentOption.value: 'medium' # For this OVA, the values are Eval, PSN_Lite, small, medium
+      delegate_to: localhost
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # Attach the ztp.iso to the VM using the full datastore path
     # the `datastore` name must be enclosed in [brackets] followed by
     # the rest of the path.
     # Specify the device to attach the iso: `cdrom`, `controller_number`,
     # `unit_number`
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
-    # - name: Add ZTP info to VM
-    #   community.vmware.vmware_guest:
-    #     validate_certs: no
-    #     name: vmware-sadmin
-    #     state: present
-    #     cdrom:
-    #     - type: "iso"
-    #       iso_path: "[{{ datastore }}] /ISO/ZTP/vmware-sadmin.iso"
-    #       controller_number: 1
-    #       unit_number: 1
-
-    - name: Deploy {{ upg_span }} version 3.3 on ESXi
+    - name: Add ZTP info to VM
       community.vmware.vmware_guest:
+        validate_certs: no
         name: vmware-sadmin
-        state: poweredoff
-        datastore: "{{ datastore }}"
-        guest_id: rhel8_64Guest
-        folder: /
-        disk:
-        - size_gb: 300
-          type: thin
-          controller_number: 0
-          unit_number: 0
-          controller_type: paravirtual
-          datastore: "[{{ datastore }}]"
-          disk_mode: persistent
-        networks: 
-        - name: '{{ ProvisioningNetworkLabel }}'
+        state: present
         cdrom:
         - type: "iso"
-          iso_path: "[{{ iso_datastore }}] /{{ ise33_iso }}"
+          iso_path: "[{{ datastore }}] /ISO/ZTP/vmware-sadmin.iso"
           controller_number: 0
           unit_number: 0
-        - type: "iso"
-          iso_path: "[{{ datastore }}] /ISO/ZTP/vmware-sadmin.iso"
-          controller_number: 1
-          unit_number: 0
-        hardware:
-          boot_firmware: "bios"
-          memory_mb: 32768
-          num_cpus: 16
-          num_cpu_cores_per_socket: 4
-          cpu_reservation: 32000
-          mem_reservation: 32768
-          memory_reservation_lock: true
-          scsi: paravirtual
-          version: latest
-        validate_certs: no
-      delegate_to: localhost
-      register: deploy_vm
-      ignore_errors: yes
 
     #--------------------------------------------------------------------------
     # Power on the VM
@@ -123,7 +81,7 @@
           {{bar}}    $@@@P    @@@    @@@    @@@    $@@     @@F   %@,   ,g$@  @F     "$g,  ,g@    
           {{bar}}     ""`      "`    `"`    '"`     "       `      """"  '`  "         """"  
           {{bar}}
-          {{bar}}                Your NEW ISE 3.3 Primary Admin Node has been deployed!
+          {{bar}} Your NEW ISE 3.3 {{ upg_span }} has been deployed!
           
     - name: Refresh inventory to ensure new instances exist in inventory ⟳
       ansible.builtin.meta: refresh_inventory
@@ -140,7 +98,7 @@
             (::::)
            --------
 
-    - name: ISE Login ⮕ | vmware-sadmin | 🕑 ~50m
+    - name: ISE Login ⮕ | vmware-sadmin | 🕑 ~25m
       delegate_to: localhost
       ansible.builtin.uri:
         url: https://vmware-sadmin.securitydemo.net/admin/login.jsp

@@ -9,50 +9,50 @@
 
   tasks:
 
-  - name: Create aws-psn ⏳
-    amazon.aws.ec2_instance:
-      # state: present        # instances exist but not guarantee of state (e.g. running)
-      # state: running        # present + ensures the instances are running
-      # state: started        # running + waits for EC2 status checks; ~3 minutes per node
-      # state: stopped        # ensures an existing instance is stopped.
-      # state: terminated     # ensures an existing instance is terminated.
-      name: "aws-psn"
-      region: "{{ aws_region }}"
-      key_name: "{{ aws_ssh_key }}"
-      vpc_subnet_id: "{{ private_subnet_id }}"
-      image_id: "{{ ise33_ami }}"
-      instance_type: "{{ instance_type }}"
-      network:
-        private_ip_address: "192.168.104.110"
-        delete_on_termination: true
-      security_group: "{{ security_group }}" #  SG_Public # name or ID
-      volumes:
-        - device_name: /dev/sda1
-          ebs:
-            volume_size: "300"
-            delete_on_termination: true
-      wait: yes
-      tags:
-        project: "{{ project_name }}"
-        owner: "{{ owner }}"
-        started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
-        role: "PSN"
-        version: "3.2"
-      user_data: "hostname=aws-psn\nprimarynameserver=10.1.100.10\ndnsdomain=securitydemo.net\nntpserver=10.1.100.1\ntimezone={{ timezone | default('Etc/UTC') }}\nusername={{ ise_username }}\npassword={{ ise_init_password }}"
-  
-  - name: aws-psn has been deployed!
-    ansible.builtin.debug:
-      msg: |
-        {{bar}}⠀⠀⣠⣤⣤⣤⣤⡀⠀⢠⣤⠀⠀⠀⢠⣤⡄⠀⠀⢀⣤⡄⠀⣠⣤⣶⣤⣄⠀⠀
-        {{bar}}⠀⠈⠉⠉⠀⠈⢹⣿⡆⠈⣿⣇⠀⠀⣾⣿⣇⠀⠀⣼⡿⠁⢸⣿⠉⠀⠈⠉⠁⠀
-        {{bar}}⠀⠀⣠⣤⣶⣦⣴⣿⡇⠀⠹⣿⠀⢰⡿⠈⣿⡄⢀⣿⠃⠀⠘⠻⣷⣶⣤⣄⠀⠀
-        {{bar}}⠀⢸⣿⠁⠀⠀⢠⣿⡇⠀⠀⢿⣇⣼⡇⠀⢹⣧⣼⡟⠀⠀⠀⠀⠀⠀⠉⣿⡇⠀
-        {{bar}}⠀⠘⢿⣶⣶⡶⠟⢿⠷⠀⠀⠘⣿⡿⠀⠀⠘⣿⡿⠁⠀⠀⠲⣶⣶⣶⣶⠿⠃⠀
-        {{bar}}⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-        {{bar}}⠢⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠚⠛⠛⢿⣷
-        {{bar}}⠀⠈⠙⠿⣶⣤⣄⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣤⣴⠾ ⣸⡏
-        {{bar}}⠀⠀⠀⠀⠈⠉⠛⠿⢿⣿⣷⣶⣶⣶⣶⣶⣶⣶⣶⣶⣿⠿⠿⠛⠉  ⠠⠋⠀
-        {{bar}}⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠉⠙⠛⠛⠉⠉⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+    - name: Create aws-psn ⏳
+      amazon.aws.ec2_instance:
+        # state: present        # instances exist but not guarantee of state (e.g. running)
+        # state: running        # present + ensures the instances are running
+        # state: started        # running + waits for EC2 status checks; ~3 minutes per node
+        # state: stopped        # ensures an existing instance is stopped.
+        # state: terminated     # ensures an existing instance is terminated.
+        name: "aws-psn"
+        region: "{{ aws_region }}"
+        key_name: "{{ aws_ssh_key }}"
+        vpc_subnet_id: "{{ private_subnet_id }}"
+        image_id: "{{ ise33_ami }}"
+        instance_type: "{{ instance_type }}"
+        network:
+          private_ip_address: "192.168.104.110"
+          delete_on_termination: true
+        security_group: "{{ security_group }}" #  SG_Public # name or ID
+        volumes:
+          - device_name: /dev/sda1
+            ebs:
+              volume_size: "300"
+              delete_on_termination: true
+        wait: yes
+        tags:
+          project: "{{ project_name }}"
+          owner: "{{ owner }}"
+          started: "{{ '%Y-%m-%d T%H:%M:%S-%Z' | strftime }}"
+          role: "PSN"
+          version: "3.2"
+        user_data: "hostname=aws-psn\nprimarynameserver=10.1.100.10\ndnsdomain=securitydemo.net\nntpserver=10.1.100.1\ntimezone={{ timezone | default('Etc/UTC') }}\nusername={{ ise_username }}\npassword={{ ise_init_password }}"
+    
+    - name: aws-psn has been deployed!
+      ansible.builtin.debug:
+        msg: |
+          {{bar}}⠀⠀⣠⣤⣤⣤⣤⡀⠀⢠⣤⠀⠀⠀⢠⣤⡄⠀⠀⢀⣤⡄⠀⣠⣤⣶⣤⣄⠀⠀
+          {{bar}}⠀⠈⠉⠉⠀⠈⢹⣿⡆⠈⣿⣇⠀⠀⣾⣿⣇⠀⠀⣼⡿⠁⢸⣿⠉⠀⠈⠉⠁⠀
+          {{bar}}⠀⠀⣠⣤⣶⣦⣴⣿⡇⠀⠹⣿⠀⢰⡿⠈⣿⡄⢀⣿⠃⠀⠘⠻⣷⣶⣤⣄⠀⠀
+          {{bar}}⠀⢸⣿⠁⠀⠀⢠⣿⡇⠀⠀⢿⣇⣼⡇⠀⢹⣧⣼⡟⠀⠀⠀⠀⠀⠀⠉⣿⡇⠀
+          {{bar}}⠀⠘⢿⣶⣶⡶⠟⢿⠷⠀⠀⠘⣿⡿⠀⠀⠘⣿⡿⠁⠀⠀⠲⣶⣶⣶⣶⠿⠃⠀
+          {{bar}}⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+          {{bar}}⠢⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠚⠛⠛⢿⣷
+          {{bar}}⠀⠈⠙⠿⣶⣤⣄⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣤⣴⠾ ⣸⡏
+          {{bar}}⠀⠀⠀⠀⠈⠉⠛⠿⢿⣿⣷⣶⣶⣶⣶⣶⣶⣶⣶⣶⣿⠿⠿⠛⠉  ⠠⠋⠀
+          {{bar}}⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠉⠙⠛⠛⠉⠉⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 
-  - name: Refresh inventory to ensure new instances exist in inventory ⟳
-    ansible.builtin.meta: refresh_inventory
+    - name: Refresh inventory to ensure new instances exist in inventory ⟳
+      ansible.builtin.meta: refresh_inventory

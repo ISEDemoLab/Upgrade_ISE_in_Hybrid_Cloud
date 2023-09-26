@@ -13,20 +13,20 @@
   # Retrieve the currently running RADIUS configuration
   # ------------------------------------------------------------------------
 
-  - name: Download file from Remote Machine to Local ansible-node directory
-    fetch:
-      src: /home/ubuntu/traefik/config/radius.yaml
-      dest: traefik/
-      remote_src: yes
-      flat: yes
-      force: yes
+    - name: Download file from Remote Machine to Local ansible-node directory
+      fetch:
+        src: /home/ubuntu/traefik/config/radius.yaml
+        dest: traefik/
+        remote_src: yes
+        flat: yes
+        force: yes
 
-  # ------------------------------------------------------------------------
-  # Disable the `iteration_1` PSNs in the Load Balancer
-  # ------------------------------------------------------------------------
+    # ------------------------------------------------------------------------
+    # Disable the `iteration_1` PSNs in the Load Balancer
+    # ------------------------------------------------------------------------
 
-  - name: Copy Configuration to LB disabling `iteration_1` nodes
-    copy:
-      src: radius_1.yaml
-      dest: /home/ubuntu/traefik/config/radius.yaml
-      backup: no
+    - name: Copy Configuration to LB disabling `iteration_1` nodes
+      copy:
+        src: radius_1.yaml
+        dest: /home/ubuntu/traefik/config/radius.yaml
+        backup: no

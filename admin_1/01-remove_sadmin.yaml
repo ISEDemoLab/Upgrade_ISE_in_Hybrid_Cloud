@@ -39,30 +39,30 @@
   # This is why we use the `ignore_errors: yes` flag.
   # ------------------------------------------------------------------------
 
-  - name: Remove ISE Node from the Deployment | vmware-sadmin 🪓
-    cisco.ise.node_deployment:
-      ise_hostname: "{{ upg_ppan }}" # ISE PAN
-      ise_username: "{{ ise_username }}"
-      ise_password: "{{ ise_password }}"
-      ise_verify: "{{ ise_verify }}"
-      ise_debug: "{{ ise_debug }}"
-      state: absent
-      hostname: vmware-sadmin # MUST use the hostname here, fqdn will fail!
-    register: ise_node_update
-    timeout: 600 # Default: 300. Stop checking after <seconds>
-    ignore_errors: yes
+    - name: Remove ISE Node from the Deployment | vmware-sadmin 🪓
+      cisco.ise.node_deployment:
+        ise_hostname: "{{ upg_ppan }}" # ISE PAN
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        ise_debug: "{{ ise_debug }}"
+        state: absent
+        hostname: vmware-sadmin # MUST use the hostname here, fqdn will fail!
+      register: ise_node_update
+      timeout: 600 # Default: 300. Stop checking after <seconds>
+      ignore_errors: yes
 
-  - name: Verify All Nodes Deregistered from PPAN | {{ ise_ppan }}
-    # when: inventory_hostname == ise_ppan_name
-    cisco.ise.node_info:
-      ise_hostname: "{{ upg_ppan }}" # PPAN!
-      ise_username: "{{ ise_username }}"
-      ise_password: "{{ ise_password }}"
-      ise_verify: "{{ ise_verify }}"
-      ise_debug: "{{ ise_debug }}"
-    register: node_info
-    until: node_info.ise_response | count == 7  
-    delay: 10 # Default: 0. seconds to delay between retries
-    retries: 180
-    timeout: 1800 # retries * delay. Default: 300. Stop checking after <seconds>
+    - name: Verify All Nodes Deregistered from PPAN | {{ ise_ppan }}
+      # when: inventory_hostname == ise_ppan_name
+      cisco.ise.node_info:
+        ise_hostname: "{{ upg_ppan }}" # PPAN!
+        ise_username: "{{ ise_username }}"
+        ise_password: "{{ ise_password }}"
+        ise_verify: "{{ ise_verify }}"
+        ise_debug: "{{ ise_debug }}"
+      register: node_info
+      until: node_info.ise_response | count == 7  
+      delay: 10 # Default: 0. seconds to delay between retries
+      retries: 180
+      timeout: 1800 # retries * delay. Default: 300. Stop checking after <seconds>
 

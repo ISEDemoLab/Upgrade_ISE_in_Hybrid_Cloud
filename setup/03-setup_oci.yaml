@@ -8,6 +8,7 @@
   vars_files:
     - ../vars/main.yaml
     - ../vars/banners.yaml
+  tasks:
 
 ##################################################################################
 # Use the `OCI Stuff` section of the `vars/main.yaml` file to add ISE specific
@@ -20,7 +21,7 @@
 #
 # The `user_data` must be base64 encoded to be used
 ##################################################################################
-  tasks:
+
     - name: Create oci-psn ⏳ | 🕑 ~72s
       oci_compute_instance:
         availability_domain: "{{ oci_ad }}"
