@@ -1,5 +1,5 @@
 ---
-- name: Deploy VMware nodes 
+- name: Deploy VMware nodes (ISE 3.2)
   ansible.builtin.import_playbook: 01-vmware_iso.yaml
   tags: [ise32,vmware,install]
 
