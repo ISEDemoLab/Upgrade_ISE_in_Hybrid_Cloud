@@ -1,7 +1,7 @@
 # Dynamic RADIUS configuration
 #############################################################################################
 # Each protocol (http, tcp, udp) needs its own dynamic configuration file.
-# The `routers` below are simply how to define the entrypoint and assign it to a
+# The `routers` below are simply how to define the entrypoint and assign it to a 
 # server group under `services`.  The `router` name is arbitrary in this file, but
 # should be a meaningful name.
 #
@@ -44,8 +44,8 @@ udp:
 # (radius-1) is arbitrary, but should be meaningful and is referenced above in the `routers`
 # section.
 #
-# healthChecks remove unhealthy servers from the load balancing rotation. Traefik will
-# consider your servers healthy as long as they return status codes between 2XX and 3XX to
+# healthChecks remove unhealthy servers from the load balancing rotation. Traefik will 
+# consider your servers healthy as long as they return status codes between 2XX and 3XX to 
 # the health check requests.  Optional settings can be found at:
 # https://doc.traefik.io/traefik/routing/services/
 #############################################################################################

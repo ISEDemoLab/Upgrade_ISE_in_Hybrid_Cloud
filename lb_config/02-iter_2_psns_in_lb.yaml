@@ -1,5 +1,5 @@
 ---
-- name: Remove Nodes from Traefik Load Balancer
+- name: Remove Iteration_2 Nodes from Traefik Load Balancer
   hosts: traefik
   become: yes
   gather_facts: false
@@ -16,5 +16,10 @@
     - name: Copy Configuration to LB disabling `iteration_2` nodes
       copy:
         src: radius_2.yaml
-        dest: /home/ubuntu/traefik/config/radius.yaml
+        dest: /etc/traefik/config/
         backup: no
+
+    - name: Rename the `radius_2.yaml` file to `radius.yaml`
+      ansible.builtin.shell:
+        cmd: sudo mv radius_2.yaml radius.yaml
+        chdir: /etc/traefik/config/

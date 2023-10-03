@@ -1,5 +1,5 @@
 ---
-- name: Remove Nodes from Traefik Load Balancer
+- name: Restore PSNs to the Traefik Load Balancer
   hosts: traefik
   become: yes
   gather_facts: false
@@ -13,8 +13,13 @@
   # Restore the original RADIUS configuration in the Load Balancer
   # ------------------------------------------------------------------------
 
-    - name: Copy Configuration to LB disabling `iteration_1` nodes
+    - name: Restore all PSNs in the Load Balancer
       copy:
-        src: traefik/radius.yaml
-        dest: /home/ubuntu/traefik/config/radius.yaml
+        src: radius_og.yaml
+        dest: /etc/traefik/config/
         backup: no
+
+    - name: Rename the `radius_og.yaml` file to `radius.yaml`
+      ansible.builtin.shell:
+        cmd: sudo mv radius_og.yaml radius.yaml
+        chdir: /etc/traefik/config/

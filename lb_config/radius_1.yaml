@@ -9,35 +9,35 @@
 #   routers:                # To begin the `routers` context
 #     auth1router:          # Name fo the router
 #       entryPoints:        # EntryPoints are defined in the Static Configuration File
-#       - auth1             # The entryPint from the Static Configuration File to be assigned
+#       - auth1             # The entryPoint from the Static Configuration File to be assigned
 #       service: radius-1   # The server group (below) to which the entryPoint is assigned
 #############################################################################################
 udp:
   routers:
     auth1router:
-      entryPoints:
-      - auth1
       service: radius-1
-    auth2router:
-      entryPoints:
-      - auth2
-      service: radius-2
-    auth3router:
-      entryPoints:
-      - auth3
-      service: radius-3
-    acct1router:
       entryPoints:
       - auth1
-      service: acct-1
-    acct2router:
+    auth2router:
+      service: radius-2
       entryPoints:
       - auth2
-      service: acct-2
-    acct3router:
+    auth3router:
+      service: radius-3
       entryPoints:
       - auth3
+    acct1router:
+      service: acct-1
+      entryPoints:
+      - auth1
+    acct2router:
+      service: acct-2
+      entryPoints:
+      - auth2
+    acct3router:
       service: acct-3
+      entryPoints:
+      - auth3
 
 #############################################################################################
 # The `services` section assigns the backend servers to the entryPoint.  The `service` name

@@ -1,5 +1,5 @@
 ---
-- name: Remove Nodes from Traefik Load Balancer
+- name: Remove Iteration_1 Nodes from Traefik Load Balancer
   hosts: traefik
   become: yes
   gather_facts: false
@@ -15,7 +15,7 @@
 
     - name: Download file from Remote Machine to Local ansible-node directory
       fetch:
-        src: /home/ubuntu/traefik/config/radius.yaml
+        src: /etc/traefik/config/radius.yaml
         dest: traefik/
         remote_src: yes
         flat: yes
@@ -28,5 +28,10 @@
     - name: Copy Configuration to LB disabling `iteration_1` nodes
       copy:
         src: radius_1.yaml
-        dest: /home/ubuntu/traefik/config/radius.yaml
+        dest: /etc/traefik/config/
         backup: no
+
+    - name: Rename the `radius_1.yaml` file to `radius.yaml`
+      ansible.builtin.shell:
+        cmd: sudo mv radius_1.yaml radius.yaml
+        chdir: /etc/traefik/config/

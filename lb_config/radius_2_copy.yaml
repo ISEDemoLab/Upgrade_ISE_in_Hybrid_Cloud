@@ -53,7 +53,8 @@ udp:
     radius-1:
       loadBalancer:
         servers:
-          - address: "192.168.104.4:1812"
+          - address: "192.168.104.50:1812"
+          # - address: "192.168.104.4:1812"
           # - address: "10.1.100.25:1812"
     radius-2:
       loadBalancer:
@@ -69,7 +70,8 @@ udp:
     acct-1:
       loadBalancer:
         servers:
-          - address: "192.168.104.4:1813"
+          - address: "192.168.104.50:1813"
+          # - address: "192.168.104.4:1813"
           # - address: "10.1.100.25:1813"
     acct-2:
       loadBalancer:
