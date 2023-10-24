@@ -231,6 +231,13 @@ export ISE_USERNAME=iseadmin
 export ISE_PASSWORD=<ise_password>
 export ISE_VERIFY=False
 export ISE_DEBUG=False
+
+export EMAIL_FROM=<email_address_from_which_to_send>
+export EMAIL_SERVER=<email_address>
+export EMAIL_PROTOCOL='SSMTP'
+export EMAIL_PORT=<smtp_port>
+export EMAIL_USER=<email_username>
+export EMAIL_PASSWORD=<email_password>
 ```
 
 or you may edit and source these variables from a file in your `~/.secrets` directory.  I keep my credentials for each platform in a separate file, this way I can source only the credentials needed for the current project.  OCI doesn't require this since it sources the credentials from the default config file as detailed above.
@@ -240,6 +247,8 @@ source ~/.secrets/azure.sh
 source ~/.secrets/aws.sh
 source ~/.secrets/vmware.sh
 source ~/.secrets/ise.sh
+source ~/.secrets/oci.sh
+source ~/.secrets/email.sh
 ```
 
 ## Ansible Variables
@@ -257,7 +266,7 @@ ansible-playbook upgrade.yaml
 
 Contents of upgrade.yaml. Each playbook will finish before moving on to the next. You can skip a playbook by commenting it out (add `# ` before the entry).
 
-I use this method to consistently upgrade my 8-node 3.2 Patch 3 deployment to 3.3 in **6 hours 40 minutes**.
+I use this method to consistently upgrade my 8-node 3.2 Patch 3 deployment to 3.3 in **6 hours 17 minutes**.
 
 ```upgrade.yaml
 ---

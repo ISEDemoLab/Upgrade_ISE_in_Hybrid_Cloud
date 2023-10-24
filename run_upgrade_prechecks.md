@@ -29,9 +29,9 @@ Let's break this down a bit:
 |---|---|
 |"bundleName"|Simple, this is name name of the `ise-upgradebundle`|
 |"hostnames"|Used if choosing `SPLIT_UPGRADE`. If using `FULL_UPGRADE` the value is `[]`|
-|"patchBundleName"|Easy, this is the `ise-patchbundle` nameJust like through the GUI, you can install a patch during the upgrade process|
+|"patchBundleName"|Easy, this is the `ise-patchbundle` name. Just like through the GUI, you can install a patch during the upgrade process|
 |"preCheckReportID"|This is to be used in conjunction with the `reTrigger` attribute|
-|"preChecks"|This is the list of `preChecks` that you want to runUnless you are setting `reTrigger` to `true`, this value should simply be `[]`|
+|"preChecks"|This is the list of `preChecks` that you want to run. Unless you are setting `reTrigger` to `true`, this value should simply be `[]`|
 |"reTrigger"|To recheck specific `preChecks`, set this to `true`, enter the `preCheckReportID` attribute value, and list the `preChecks` to run again|
 |"repoName"|The repository that contains the `ise-upgradebundle` and (if applicable) the `ise-patchbundle`|
 |"upgradeType"|Choose `FULL_UPGRADE` or `SPLIT_UPGRADE`|

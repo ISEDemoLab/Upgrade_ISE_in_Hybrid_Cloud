@@ -140,5 +140,6 @@
           {{bar}}
           {{bar}} - {{ upg_ppan }} 
           {{bar}} - {{ upg_span }}
+
     - name: Refresh inventory to ensure new instances exist in inventory ⟳
       ansible.builtin.meta: refresh_inventory

@@ -1,5 +1,11 @@
 # Upgrade_ISE_in_Hybrid_Cloud/notifications
 
+I use three different notification methods throughout this repository:
+- [sSMTP](#ssmtp)
+- [Swaks - Swiss Army Knife for SMTP](#swaks---swiss-army-knife-for-smtp)
+- [NTFY](#ntfy)
+
+## sSMTP
 Using sSMTP in my local linux install from which I run my Ansible Playbooks, I can send email from the command line. This is a pretty simple install and is easy to use.
 
 ## Configuration
@@ -154,12 +160,12 @@ sudo apt install -y swaks
 First, create a file to set environment variables so that sensitive information is not saved in playbooks.  I put mine in `~/.secrets/email.sh`
 
 ```sh
-export EMAIL_FROM='ansible@domain.com'		# The email address that Ansible will use to SEND
-export EMAIL_SERVER='mail.domain.com'		# The email SMTP server to use
-export EMAIL_PROTOCOL='SMTP'			# The email protocol used
-export EMAIL_PORT='25'				# The port used to send email
-export EMAIL_USER='ansible@domain.com'		# The username for SMTP authentication
-export EMAIL_PASSWORD='password'		# The password for SMTP authentication
+export EMAIL_FROM='ansible@domain.com'	# The email address that Ansible will use to SEND
+export EMAIL_SERVER='mail.domain.com'   # The email SMTP server to use
+export EMAIL_PROTOCOL='SMTP'            # The email protocol used
+export EMAIL_PORT='25'                  # The port used to send email
+export EMAIL_USER='ansible@domain.com'	# The username for SMTP authentication
+export EMAIL_PASSWORD='password'        # The password for SMTP authentication
 ```
 
 Load the variables into your environment
@@ -168,7 +174,7 @@ Load the variables into your environment
 source ~/.secrets/email.sh
 ```
 
-If you want to verify that the variables loaded, you can check by using this command"
+If you want to verify that the variables loaded, you can check by using this command
 
 ```sh
 env | grep EMAIL
@@ -201,6 +207,28 @@ To add files for the `--body` and `--attach` options, prepend the file path with
           --attach @../notifications/precheck_report.json 
           --attach-name precheck_report.json
 ```
+
+## NTFY
+
+### Push notifications made easy
+> ntfy (pronounced notify) is a simple HTTP-based pub-sub notification service. It allows you to send notifications to your phone or desktop via scripts from any computer, and/or using a REST API. It's infinitely flexible, and 100% free software.
+
+
+
+
+```
+    - name: Send Push Notification
+      ansible.builtin.shell:
+        cmd: |
+          curl \
+            -H "Title: Your 3.2 deployment has successfully been provisioned" \
+            -H "Priority: urgent" \
+            -H "Tags: bell,loudspeaker" \
+            -d "Before anything else, please log in to the WebGUI" \
+            ntfy.sh/ise-ansible 
+```
+
+![ntfy](images/https://github.com/ISEDemoLab/Upgrade_ISE_in_Hybrid_Cloud/blob/ntfy.png)
 
 ## License
 

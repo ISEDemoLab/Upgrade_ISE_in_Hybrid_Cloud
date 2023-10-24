@@ -199,47 +199,6 @@
       retries: "1000"
       delay: "10" # wait between checks
 
-    # - name: Register the Cloud-based PSNs to the deployment | 🕑 ~5m
-    #   cisco.ise.personas_register_node:
-    #     primary_ip: "10.1.100.40"
-    #     primary_username: "{{ ise_username }}"
-    #     primary_password: "{{ ise_init_password }}"
-    #     fqdn: "{{ item.fqdn }}"
-    #     username: "{{ ise_username }}"
-    #     password: "{{ ise_init_password }}"
-    #     roles: "{{ item.roles }}"
-    #     services: "{{ item.services }}"
-    #   loop:
-    #     - fqdn: "oci-psn.securitydemo.net"
-    #       roles: []
-    #       services:
-    #         - Session
-    #         - Profiler
-    #         - pxGrid
-    #     - fqdn: "aws-psn.securitydemo.net"
-    #       roles: []
-    #       services:
-    #         - Session
-    #         - Profiler
-    #         - DeviceAdmin
-    #     - fqdn: "azure-psn2.securitydemo.net"
-    #       roles: []
-    #       services: 
-    #         - Session
-    #         - Profiler
-    #     - fqdn: "oci-psn2.securitydemo.net"
-    #       roles: []
-    #       services:
-    #         - Session
-    #         - Profiler
-    #         - pxGrid
-    #     - fqdn: "aws-psn2.securitydemo.net"
-    #       roles: []
-    #       services:
-    #         - Session
-    #         - Profiler
-    #         - DeviceAdmin
-
     - name: Create Node Group 'WestUS'
       cisco.ise.node_group:
         ise_hostname: "{{ upg_ppan }}"

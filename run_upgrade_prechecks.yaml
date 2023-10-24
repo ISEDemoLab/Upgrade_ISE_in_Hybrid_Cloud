@@ -238,7 +238,7 @@
         content: |
           {{ result.json }}
 
-    - name: Copy the report content to the file
+    - name: Copy the report results to the file
       vars:
         icons:
           Success: '✅'         # Emoji Icons

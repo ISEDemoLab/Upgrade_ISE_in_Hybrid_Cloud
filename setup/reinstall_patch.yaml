@@ -11,11 +11,12 @@
   
   - name: Rollback Patch 3
     cisco.ise.patch_rollback:
-      ise_hostname: "vmware-sadmin.securitydemo.net"
+      ise_hostname: "vmware-admin.securitydemo.net"
       ise_username: "{{ ise_username }}"
       ise_password: "{{ ise_init_password }}"
       ise_verify: "{{ ise_verify }}"
       patchNumber: 3
+    ignore_errors: yes
 
   - name: Wait for ISE App Server Going Down ∇ ∇ ∇ Banner
     when: ise_restore_task_id is defined
@@ -35,7 +36,7 @@
     delegate_to: localhost
     when: ise_restore_task_id is defined
     ansible.builtin.wait_for:
-      host: "{{ upg_span }}"
+      host: "{{ upg_ppan }}"
       port: 443 # GUI / REST / API Gateway
       state: stopped # Port is CLOSED [started (default)|stopped|present|absent|drained]
       sleep: 10 # Seconds to sleep between checks; Default: 1
@@ -60,7 +61,7 @@
     delegate_to: localhost
     when: ise_restore_task_id is defined
     ansible.builtin.wait_for:
-      host: "{{ upg_span }}"
+      host: "{{ upg_ppan }}"
       port: 443 # GUI / REST / API Gateway
       state: started # [started (default)|stopped|present|absent|drained]
       sleep: 10 # Seconds to sleep between checks; Default: 1
@@ -71,7 +72,7 @@
     delegate_to: localhost
     when: ise_restore_task_id is defined
     ansible.builtin.uri:
-      url: https://vmware-sadmin.securitydemo.net/admin/login.jsp
+      url: https://vmware-admin.securitydemo.net/admin/login.jsp
       method: GET
       follow_redirects: safe
       timeout: 10
@@ -85,7 +86,7 @@
   - name: Install 3.2 Patch 3 on vmware-sadmin
     delegate_to: localhost
     ansible.builtin.uri:
-      url: "https://vmware-sadmin.securitydemo.net/api/v1/patch/install"
+      url: "https://vmware-admin.securitydemo.net/api/v1/patch/install"
       method: POST
       url_username: "{{ ise_username }}"
       url_password: "{{ ise_init_password }}"
