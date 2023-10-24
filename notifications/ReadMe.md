@@ -211,7 +211,7 @@ To add files for the `--body` and `--attach` options, prepend the file path with
 ## NTFY
 
 ### Push notifications made easy
-> ntfy (pronounced notify) is a simple HTTP-based pub-sub notification service. It allows you to send notifications to your phone or desktop via scripts from any computer, , using simple HTTP `PUT` or `POST` requests. It's infinitely flexible, and 100% free, though there _are_ paid plans.
+ntfy (pronounced notify) is a simple HTTP-based pub-sub notification service. It allows you to send notifications to your phone or desktop via scripts from any computer using simple HTTP `PUT` or `POST` requests. It's very flexible and 100% free, though there _are_ paid plans.
 
 I use it to notify myself when scripts fail or long-running commands complete, such as provisioning or terminating a full deployment or when an upgrade has finished.
 
