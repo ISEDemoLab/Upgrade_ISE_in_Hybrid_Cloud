@@ -211,9 +211,13 @@ To add files for the `--body` and `--attach` options, prepend the file path with
 ## NTFY
 
 ### Push notifications made easy
-> ntfy (pronounced notify) is a simple HTTP-based pub-sub notification service. It allows you to send notifications to your phone or desktop via scripts from any computer, and/or using a REST API. It's infinitely flexible, and 100% free software.
+> ntfy (pronounced notify) is a simple HTTP-based pub-sub notification service. It allows you to send notifications to your phone or desktop via scripts from any computer, , using simple HTTP `PUT` or `POST` requests. It's infinitely flexible, and 100% free, though there _are_ paid plans.
 
+I use it to notify myself when scripts fail or long-running commands complete, such as provisioning or terminating a full deployment or when an upgrade has finished.
 
+There's actually nothing to do on the server side (no need to create an account or to log in).  Install the app on your device and open it.  Add a notification subscription using the + in the top right corner. Then name the notification you want to use.  Make it unique, you don't want to get a stranger's notifications!
+
+Once you have subscribed to the notification, you can create a push notification using a simple `curl` command:
 
 
 ```
@@ -228,7 +232,12 @@ To add files for the `--body` and `--attach` options, prepend the file path with
             ntfy.sh/ise-ansible 
 ```
 
+The name of the notification is in the last line of the command.  Once used, you will start receiving push notifications!  Here are a few of mine:
+
 <img src="https://github.com/ISEDemoLab/Upgrade_ISE_in_Hybrid_Cloud/blob/main/images/ntfy.png" width="258" height="559" />
+
+Read more about ntfy at https://docs.ntfy.sh/
+
 
 ## License
 
