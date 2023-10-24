@@ -228,7 +228,7 @@ To add files for the `--body` and `--attach` options, prepend the file path with
             ntfy.sh/ise-ansible 
 ```
 
-![ntfy](images/https://github.com/ISEDemoLab/Upgrade_ISE_in_Hybrid_Cloud/blob/main/ntfy.png)
+![ntfy](images/https://github.com/ISEDemoLab/Upgrade_ISE_in_Hybrid_Cloud/blob/main/images/ntfy.png)
 
 ## License
 
