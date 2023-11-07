@@ -14,7 +14,7 @@
   # ------------------------------------------------------------------------
 
     - name: Download file from Remote Machine to Local ansible-node directory
-      fetch:
+      ansible.builtin.fetch:
         src: /etc/traefik/config/radius.yaml
         dest: traefik/
         remote_src: yes
@@ -26,7 +26,7 @@
     # ------------------------------------------------------------------------
 
     - name: Copy Configuration to LB disabling `iteration_1` nodes
-      copy:
+      ansible.builtin.copy:
         src: radius_1.yaml
         dest: /etc/traefik/config/
         backup: no

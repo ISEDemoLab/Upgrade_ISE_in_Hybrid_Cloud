@@ -14,7 +14,7 @@
   # ------------------------------------------------------------------------
 
     - name: Copy Configuration to LB disabling `iteration_2` nodes
-      copy:
+      ansible.builtin.copy:
         src: radius_2.yaml
         dest: /etc/traefik/config/
         backup: no

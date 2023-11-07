@@ -110,7 +110,7 @@ This is also sent to the Primary PAN.  The response is _LONG_! review the respon
 
 ## `reTrigger` Upgrade PreChecks
 
-To `reTrigger`, send a `POST` request for `https://{{ upg_ppan }}/api/v1/upgrade/prepare/pre-checks` spcifying the `preChecks` you want to recheck
+To `reTrigger`, send a `POST` request for `https://{{ upg_ppan }}/api/v1/upgrade/prepare/pre-checks` specifying the `preChecks` you want to recheck
 
 ```json
           {

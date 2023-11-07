@@ -28,7 +28,7 @@ Once installed, all you need to do is configure the `ssmtp.conf` file found in  
 sudo nano /etc/ssmtp/ssmtp.conf
 ```
 
-Add the sent From email address at the `root` entry.  The SMTP Server details will need to be entered, including any authentication information.  If your SMTP server does not use port 25 to send mail, then be sure to enable `UseSTARTTLS`
+Add the Sent From email address at the `root` entry.  The SMTP Server details will need to be entered, including any authentication information.  If your SMTP server does not use port 25 to send mail, then be sure to enable `UseSTARTTLS`
 
 ```ssmtp.conf
 #

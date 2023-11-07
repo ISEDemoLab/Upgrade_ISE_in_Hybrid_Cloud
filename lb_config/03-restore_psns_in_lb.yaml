@@ -14,7 +14,7 @@
   # ------------------------------------------------------------------------
 
     - name: Restore all PSNs in the Load Balancer
-      copy:
+      ansible.builtin.copy:
         src: radius_og.yaml
         dest: /etc/traefik/config/
         backup: no
