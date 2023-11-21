@@ -1,6 +1,6 @@
 ---
-# - name: Disable `iteration_1` PSNs in Load Balancer
-#   ansible.builtin.import_playbook: ../lb_config/01-iter_1_psns_in_lb.yaml
+- name: Disable `iteration_1` PSNs in Load Balancer
+  ansible.builtin.import_playbook: ../lb_config/01-iter_1_psns_in_lb.yaml
 
 - name: Remove nodes from ISE deployment
   ansible.builtin.import_playbook: 01-remove_nodes.yaml
@@ -41,8 +41,8 @@
 - name: Add the PSNs into the 3.3 deployment
   ansible.builtin.import_playbook: 12-add_nodes.yaml
 
-# - name: Restore `iteration_1` PSNs in Load Balancer
-#   ansible.builtin.import_playbook: ../lb_config/02-restore_psns_in_lb.yaml
+- name: Restore `iteration_1` PSNs in Load Balancer
+  ansible.builtin.import_playbook: ../lb_config/02-restore_psns_in_lb.yaml
 
 - name: Iteration 1 Complete!
   ansible.builtin.import_playbook: 13-Iteration_1_complete.yaml
