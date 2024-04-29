@@ -160,7 +160,7 @@ Use this page to create the Azure service principal:
 [VMware vSphere Automation SDK for Python](https://medium.com/@hegdeanusha25/getting-started-with-the-vmware-vsphere-automation-sdk-for-python-505b9c4b03c9)
 If your virtual environment is already setup, just run the following command:
 ```sh
-pip install -- upgrade git+https://github.com/vmware/vsphere-automation-sdk-python.git
+pip install --upgrade git+https://github.com/vmware/vsphere-automation-sdk-python.git
 ```
 This is only needed for the dynamic inventory in this lab.  
 
